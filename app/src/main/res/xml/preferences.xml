@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" android:key="prefScreenImportExport">
+    <PreferenceCategory android:title="@string/pref_cat_title_security" android:key="prefCatSecurity" >
+        <ListPreference
+            android:key="prefSecurityParanoList"
+            android:defaultValue="0"
+            android:entries="@array/entries_security_mode"
+            android:summary="@string/pref_summary_security_parano"
+            android:entryValues="@array/values_security_mode"
+            android:title="@string/pref_title_security_parano" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_cat_title_import_export" android:key="prefCatDatabaseExport" >
+        <Preference
+            android:key="prefExportToDevice"
+            android:title="@string/pref_title_export"
+            android:summary="@string/pref_summary_export_to_device"/>
+        <Preference
+            android:key="prefImportFromDevice"
+            android:title="@string/pref_title_import"
+            android:summary="@string/pref_summary_import_from_device"/>
+    </PreferenceCategory>
+
+</PreferenceScreen>

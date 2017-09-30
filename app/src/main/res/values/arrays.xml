@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="entries_security_mode">
+        <item>Both</item>
+        <item>Background</item>
+        <item>Screen Off</item>
+    </string-array>
+
+    <string-array name="values_security_mode">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+</resources>
