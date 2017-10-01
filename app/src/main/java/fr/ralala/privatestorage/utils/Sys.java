@@ -85,14 +85,7 @@ public class Sys {
   }
 
   public static void switchTo(final Activity activity, final Class<?> c, boolean clear) {
-    switchTo(activity, c, null, null, clear);
-  }
-
-  public static void switchTo(final Activity activity, final Class<?> c,
-                              final String extraKey, final String extraValue, boolean clear) {
     final Intent i = new Intent(activity.getApplicationContext(), c);
-    if (extraKey != null && extraValue != null)
-      i.putExtra(extraKey, extraValue);
     if(clear) {
       i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
       i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

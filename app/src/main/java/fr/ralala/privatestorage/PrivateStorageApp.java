@@ -32,7 +32,7 @@ public class PrivateStorageApp extends Application implements Application.Activi
   private Class<?> from = null;
   private int numStarted = 0;
   private boolean isInBackground = false;
-
+  private String currentName = null;
   public enum ParanoiacMode {
     BOTH,
     BACKGROUND,
@@ -141,7 +141,13 @@ public class PrivateStorageApp extends Application implements Application.Activi
     return isInBackground;
   }
 
+  public String getCurrentName() {
+    return currentName;
+  }
 
+  public void setCurrentName(String currentName) {
+    this.currentName = currentName;
+  }
 
   /******* IMPL ********/
 

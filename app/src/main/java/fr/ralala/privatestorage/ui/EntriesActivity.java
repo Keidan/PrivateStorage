@@ -59,7 +59,6 @@ import fr.ralala.privatestorage.ui.utils.UI;
 public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAdapter.SqlItemArrayAdapterMenuListener, AdapterView.OnItemLongClickListener {
   private static final int REQ_ID_ADD = 0;
   private static final int REQ_ID_EDIT = 1;
-  protected final static String KEY_NAME = "EntriesActivity.KEY_NAME";
 
   private SqlFactory sql = null;
   private SqlItemArrayAdapter adapter = null;
@@ -79,7 +78,7 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
     sql = app.getSql();
 
     try {
-      owner = sql.getName(getIntent().getStringExtra(KEY_NAME));
+      owner = sql.getName(app.getCurrentName());
     } catch(Exception e) {
       Log.e(getClass().getSimpleName(), "SQL: " + e.getMessage(), e);
       UI.showAlertDialog(this, R.string.error, "SQL: " + e.getMessage());

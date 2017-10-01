@@ -90,6 +90,8 @@ public class NamesActivity extends DoubleBackActivity implements AdapterView.OnI
       }
     });
     ((PrivateStorageApp)getApplicationContext()).setFrom(this.getClass());
+
+    getApp().setCurrentName(null);
   }
 
   @Override
@@ -127,8 +129,10 @@ public class NamesActivity extends DoubleBackActivity implements AdapterView.OnI
           getSql().addName(sti);
         }
         adapter.add(sti);
-        if(reqId == REQ_ID_ADD)
-          Sys.switchTo(this, EntriesActivity.class, EntriesActivity.KEY_NAME, sti.getKey(), false);
+        if(reqId == REQ_ID_ADD) {
+          getApp().setCurrentName(sti.getKey());
+          Sys.switchTo(this, EntriesActivity.class, false);
+        }
       } catch(Exception e) {
         Log.e(getClass().getSimpleName(), "SQL: " + e.getMessage(), e);
         UI.showAlertDialog(this, R.string.error, "SQL: " + e.getMessage());
@@ -191,8 +195,10 @@ public class NamesActivity extends DoubleBackActivity implements AdapterView.OnI
   @Override
   public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
     SqlNameItem sti = (SqlNameItem)adapter.getItem(i);
-    if(sti != null)
-      Sys.switchTo(this, EntriesActivity.class, EntriesActivity.KEY_NAME, sti.getKey(), false);
+    if(sti != null) {
+      getApp().setCurrentName(sti.getKey());
+      Sys.switchTo(this, EntriesActivity.class, false);
+    }
   }
 
   public void showInputDialog2(final int title, final SqlNameItem.Type type, final String def, final int reqId) {
