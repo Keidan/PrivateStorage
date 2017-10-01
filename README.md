@@ -3,9 +3,14 @@ PrivateStorage
 
 (GPL) Android PrivateStorage is a FREE software.
 
-This application allows to store some data.
+This application allows to create data binders by linking them to predefined actions:
+- Copy in the clipboard
+- Launch the default dialer
+- Launch the default web browser
+- Launch the default e-mail client
 
-The data are encoded using blowfish algorithm.
+
+Except for actions, all data is stored using blowfish algorithm.
 
 
 Instructions
