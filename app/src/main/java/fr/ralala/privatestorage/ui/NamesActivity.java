@@ -15,12 +15,22 @@ import android.view.MenuItem;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.Spinner;
+import android.widget.TextView;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import fr.ralala.privatestorage.R;
 import fr.ralala.privatestorage.PrivateStorageApp;
+import fr.ralala.privatestorage.items.SpinnerIconItem;
+import fr.ralala.privatestorage.items.SqlItem;
+import fr.ralala.privatestorage.items.SqlNameItem;
+import fr.ralala.privatestorage.ui.adapters.SpinnerIconArrayAdapter;
+import fr.ralala.privatestorage.ui.adapters.SqlNamesArrayAdapter;
 import fr.ralala.privatestorage.ui.common.DoubleBackActivity;
 import fr.ralala.privatestorage.ui.adapters.SqlItemArrayAdapter;
-import fr.ralala.privatestorage.items.SqlTableItem;
 import fr.ralala.privatestorage.ui.login.LoginActivity;
 import fr.ralala.privatestorage.utils.Sys;
 import fr.ralala.privatestorage.ui.utils.UI;
@@ -40,7 +50,7 @@ public class NamesActivity extends DoubleBackActivity implements AdapterView.OnI
   private static final int REQ_ID_EDIT = 1;
 
   private SqlItemArrayAdapter adapter = null;
-  private SqlTableItem currentItem = null;
+  private SqlNameItem currentItem = null;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -61,8 +71,8 @@ public class NamesActivity extends DoubleBackActivity implements AdapterView.OnI
     setContentView(R.layout.activity_names);
     ListViewCompat list = (ListViewCompat)findViewById(R.id.content_names);
     try {
-      adapter = new SqlItemArrayAdapter(this,
-        R.layout.menu_list_item_1, getSql().getNames(), this, false, R.menu.popup_listview_names);
+      adapter = new SqlNamesArrayAdapter(this,
+        R.layout.menu_list_item_2, getSql().getNames(), this, R.menu.popup_listview_names);
       list.setAdapter(adapter);
       list.setOnItemClickListener(this);
     } catch(Exception e) {
@@ -76,7 +86,7 @@ public class NamesActivity extends DoubleBackActivity implements AdapterView.OnI
       @Override
       public void onClick(View view) {
         currentItem = null;
-        showInputDialog(R.string.new_data_title, null, REQ_ID_ADD);
+        showInputDialog2(R.string.new_data_title, SqlNameItem.Type.DISPLAY, null, REQ_ID_ADD);
       }
     });
     ((PrivateStorageApp)getApplicationContext()).setFrom(this.getClass());
@@ -99,13 +109,14 @@ public class NamesActivity extends DoubleBackActivity implements AdapterView.OnI
     super.onDestroy();
   }
 
-  public boolean inputText(int reqId, String text) {
+  public boolean inputText2(int reqId, String text, int type) {
     if(!text.isEmpty()) {
-      SqlTableItem sti = new SqlTableItem(SqlTableItem.Type.NONE, text, "");
+      SqlNameItem sti = new SqlNameItem(SqlNameItem.Type.fromInt(type), text, "");
       try {
         if(reqId == REQ_ID_EDIT) {
           adapter.remove(currentItem);
           currentItem.setKey(text);
+          currentItem.setType(sti.getType());
           getSql().updateName(currentItem);
           sti = currentItem;
         } else {
@@ -162,45 +173,62 @@ public class NamesActivity extends DoubleBackActivity implements AdapterView.OnI
   }
 
 
-  public void onMenuEdit(SqlTableItem t) {
-    currentItem = t;
-    showInputDialog(R.string.new_data_title, t.getKey(), REQ_ID_EDIT);
+  public void onMenuEdit(SqlItem t) {
+    currentItem = (SqlNameItem)t;
+    showInputDialog2(R.string.update_data_title, ((SqlNameItem) t).getType(), t.getKey(), REQ_ID_EDIT);
   }
 
-  public void onMenuDelete(final SqlTableItem t) {
+  public void onMenuDelete(final SqlItem t) {
     UI.showConfirmDialog(this, R.string.confirm_delete_name_title, R.string.confirm_delete_name_message, new View.OnClickListener() {
       @Override
       public void onClick(View view) {
         adapter.remove(t);
-        getSql().deleteName(t);
+        getSql().deleteName((SqlNameItem)t);
       }
     }, null);
   }
 
   @Override
   public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-    SqlTableItem sti = adapter.getItem(i);
+    SqlNameItem sti = (SqlNameItem)adapter.getItem(i);
     if(sti != null)
       Sys.switchTo(this, EntriesActivity.class, EntriesActivity.KEY_NAME, sti.getKey(), false);
   }
 
-
-
-  public void showInputDialog(final int title, final String def, final int reqId) {
-    showInputDialog(title, Integer.MAX_VALUE, def, reqId);
-  }
-
-  public void showInputDialog(final int title, final int hint, final String def, final int reqId) {
+  public void showInputDialog2(final int title, final SqlNameItem.Type type, final String def, final int reqId) {
     AlertDialog.Builder builder = new AlertDialog.Builder(this);
     builder.setTitle(title);
     final EditText input = new EditText(this);
-    if(hint != Integer.MAX_VALUE)
-      input.setHint(hint);
+    final Spinner spinner = new Spinner(this);
+    input.setHint(R.string.name);
     if(def != null)
       input.setText(def);
     input.setInputType(InputType.TYPE_CLASS_TEXT);
-    builder.setView(input);
 
+    List<SpinnerIconItem> list = new ArrayList<>();
+    list.add(new SpinnerIconItem(R.mipmap.ic_menu_view, getString(R.string.view)));
+    list.add(new SpinnerIconItem(R.mipmap.ic_menu_unview, getString(R.string.unview)));
+    final SpinnerIconArrayAdapter ladapter = new SpinnerIconArrayAdapter(this, list);
+    spinner.setAdapter(ladapter);
+    spinner.setSelection(SqlNameItem.Type.toInt(type));
+    final TextView tv = new TextView(this);
+    tv.setText(R.string.type);
+    LinearLayout parent = new LinearLayout(this);
+
+    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+    lp.setMargins(20, 0, 0, 20);
+    parent.setLayoutParams(lp);
+    parent.setOrientation(LinearLayout.VERTICAL);
+
+    LinearLayout.LayoutParams lpTop = new LinearLayout.LayoutParams(
+      LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+    /* int left, int top, int right, int bottom */
+    lpTop.setMargins(20, 40, 0, 20);
+    parent.addView(tv, lpTop);
+    parent.addView(spinner, lp);
+    parent.addView(input, lp);
+
+    builder.setView(parent);
     // Set up the buttons
     builder.setPositiveButton(getString(R.string.ok), null);
     builder.setNegativeButton(getString(R.string.cancel), null);
@@ -214,7 +242,7 @@ public class NamesActivity extends DoubleBackActivity implements AdapterView.OnI
         b.setOnClickListener(new View.OnClickListener() {
           @Override
           public void onClick(View view) {
-            if(inputText(reqId, input.getText().toString()))
+            if(inputText2(reqId, input.getText().toString(), spinner.getSelectedItemPosition()))
               mAlertDialog.dismiss();
           }
         });

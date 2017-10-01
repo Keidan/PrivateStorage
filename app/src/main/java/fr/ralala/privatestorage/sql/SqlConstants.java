@@ -9,7 +9,7 @@ package fr.ralala.privatestorage.sql;
  *******************************************************************************
  */
 public interface SqlConstants {
-   int    VERSION_BDD                = 1;
+   int    VERSION_BDD                = 2;
    String DB_NAME                    = "pstorage.sqlite3";
    String TABLE_LIST                 = "tbl_list";
    String TABLE_ENTRIES              = "tbl_entries";

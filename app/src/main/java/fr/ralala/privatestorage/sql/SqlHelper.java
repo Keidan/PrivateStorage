@@ -25,13 +25,12 @@ import java.util.Locale;
  */
 public class SqlHelper extends SQLiteOpenHelper implements SqlConstants {
 
-  private String getTableDef(final String name, final boolean hasType) {
+  private String getTableDef(final String name) {
     StringBuilder sb = new StringBuilder();
     sb.append("CREATE TABLE IF NOT EXISTS ").append(name).append(" (")
       .append(COL_ID).append(" INTEGER PRIMARY KEY AUTOINCREMENT, ")
       .append(COL_KEY).append(" TEXT NOT NULL, ")
       .append(COL_VALUE).append(" TEXT NOT NULL");
-    if(hasType)
       sb.append(", ").append(COL_TYPE).append(" INTEGER");
     sb.append(");");
     return sb.toString();
@@ -44,8 +43,8 @@ public class SqlHelper extends SQLiteOpenHelper implements SqlConstants {
 
   @Override
   public void onCreate(final SQLiteDatabase db) {
-    db.execSQL(getTableDef(TABLE_LIST, false));
-    db.execSQL(getTableDef(TABLE_ENTRIES, true));
+    db.execSQL(getTableDef(TABLE_LIST));
+    db.execSQL(getTableDef(TABLE_ENTRIES));
   }
   
   @Override
@@ -56,6 +55,10 @@ public class SqlHelper extends SQLiteOpenHelper implements SqlConstants {
   @Override
   public void onUpgrade(final SQLiteDatabase db, final int oldVersion,
       final int newVersion) {
+    if(oldVersion == 1 && newVersion == 2) {
+      db.execSQL("ALTER TABLE " + TABLE_LIST + " RENAME TO " + TABLE_LIST + "_v" + oldVersion);
+      db.execSQL(getTableDef(TABLE_LIST));
+    }
   }
 
   // Copy to sdcard for debug use

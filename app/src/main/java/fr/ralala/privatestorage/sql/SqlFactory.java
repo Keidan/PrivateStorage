@@ -9,10 +9,15 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import fr.ralala.privatestorage.R;
-import fr.ralala.privatestorage.items.SqlTableItem;
+import fr.ralala.privatestorage.items.SqlEntryItem;
+import fr.ralala.privatestorage.items.SqlItem;
+import fr.ralala.privatestorage.items.SqlNameItem;
+import fr.ralala.privatestorage.ui.utils.UI;
 import fr.ralala.privatestorage.utils.BlowfishCipher;
+import fr.ralala.privatestorage.utils.Sys;
 
 /**
  *******************************************************************************
@@ -37,7 +42,7 @@ public class SqlFactory implements SqlConstants {
   }
 
   /* ENTRIES FUNCTIONS */
-  public List<SqlTableItem> getEntries(SqlTableItem owner) throws Exception {
+  public List<SqlItem> getEntries(SqlNameItem owner) throws Exception {
     if(owner.getValue() != null && !owner.getValue().isEmpty()) {
       String query = "SELECT * FROM " + TABLE_ENTRIES + " WHERE " + COL_ID + " IN (" + owner.getValue() + ")";
       return query(query, true);
@@ -45,7 +50,7 @@ public class SqlFactory implements SqlConstants {
     return new ArrayList<>();
   }
 
-  public void addEntry(SqlTableItem owner, SqlTableItem entry) throws Exception {
+  public void addEntry(SqlNameItem owner, SqlEntryItem entry) throws Exception {
     insert(TABLE_ENTRIES, entry);
     String s = owner.getValue() + ENTRIES_ID_SEPARATOR + entry.getId();
     if(s.startsWith(ENTRIES_ID_SEPARATOR))
@@ -54,11 +59,11 @@ public class SqlFactory implements SqlConstants {
     updateName(owner);
   }
 
-  public void updateEntry(SqlTableItem form) throws Exception {
+  public void updateEntry(SqlEntryItem form) throws Exception {
     update(TABLE_ENTRIES, form);
   }
 
-  public void deleteEntry(SqlTableItem owner, SqlTableItem entry) throws Exception {
+  public void deleteEntry(SqlNameItem owner, SqlEntryItem entry) throws Exception {
     delete(TABLE_ENTRIES, entry);
     if(owner.getValue() != null && !owner.getValue().isEmpty()) {
       owner.setValue(owner.getValue().replaceAll("\\b," + entry.getId() + "\\b", ""));
@@ -67,25 +72,25 @@ public class SqlFactory implements SqlConstants {
   }
 
   /* NAMES FUNCTIONS */
-  public void addName(SqlTableItem name) throws Exception {
+  public void addName(SqlNameItem name) throws Exception {
     insert(TABLE_LIST, name);
   }
-  public void updateName(SqlTableItem name) throws Exception {
+  public void updateName(SqlNameItem name) throws Exception {
     update(TABLE_LIST, name);
   }
 
-  public List<SqlTableItem> getNames() throws Exception {
+  public List<SqlItem> getNames() throws Exception {
     return select(TABLE_LIST, null);
   }
 
-  public SqlTableItem getName(String name) throws Exception {
-    List<SqlTableItem> l = select(TABLE_LIST, name);
+  public SqlNameItem getName(String name) throws Exception {
+    List<?> l = select(TABLE_LIST, name);
     if(l == null || l.isEmpty())
       return null;
-    return l.get(0);
+    return (SqlNameItem)l.get(0);
   }
 
-  public void deleteName(SqlTableItem name) {
+  public void deleteName(SqlNameItem name) {
     delete(TABLE_LIST, name);
     if(name.getValue() != null && !name.getValue().isEmpty()) {
       String v[] = name.getValue().split(ENTRIES_ID_SEPARATOR);
@@ -102,13 +107,44 @@ public class SqlFactory implements SqlConstants {
       bdd.close();
   }
 
-  private SQLiteDatabase bdd() {
-    if(bdd == null || !bdd.isOpen())
+  private SQLiteDatabase bdd()  {
+    if(bdd == null || !bdd.isOpen()) {
       bdd = helper.getWritableDatabase();
+      int version = 0;
+      if(isTableExists(TABLE_LIST + "_v"+version)) {
+        try {
+          version = 1;
+          Log.i(getClass().getSimpleName(), "TABLE_LISTv\"+version+\" found");
+          List<SqlNameItem> old_list = readNamesV1();
+          bdd.delete(TABLE_LIST, null, null);
+          for (SqlNameItem n : old_list)
+            addName(n);
+          bdd().execSQL("DROP TABLE IF EXISTS " + TABLE_LIST + "_v" + version + ";");
+        } catch(Exception e) {
+          Log.e(getClass().getSimpleName(), "Exception " + e.getMessage(), e);
+          UI.showAlertDialog(context, R.string.error, R.string.error_db_update);
+        }
+      }
+      if(version != 0)
+        Sys.restartApplication(context, context.getString(R.string.restart_from_db_update_vn) + " " + (version + 1));
+    }
     return bdd;
   }
 
-  private int delete(final String table, SqlTableItem item) {
+
+  public boolean isTableExists(String tableName) {
+    Cursor cursor = bdd.rawQuery("select DISTINCT tbl_name from sqlite_master where tbl_name = '"+tableName+"'", null);
+    if(cursor!=null) {
+      if(cursor.getCount()>0) {
+        cursor.close();
+        return true;
+      }
+      cursor.close();
+    }
+    return false;
+  }
+
+  private int delete(final String table, SqlItem item) {
     return delete(table, item.getId());
   }
 
@@ -116,49 +152,77 @@ public class SqlFactory implements SqlConstants {
     return bdd().delete(table, COL_ID + " = " + id, null);
   }
 
-  private long insert(final String table, SqlTableItem item) throws Exception {
+  private long insert(final String table, SqlItem item) throws Exception {
     final ContentValues values = new ContentValues();
-    if(table.equals(TABLE_ENTRIES))
-      values.put(COL_TYPE, SqlTableItem.Type.toInt(item.getType()));
+    if(SqlNameItem.class.isInstance(item))
+      values.put(COL_TYPE, SqlNameItem.Type.toInt(((SqlNameItem)item).getType()));
+    else if(SqlEntryItem.class.isInstance(item))
+      values.put(COL_TYPE, SqlEntryItem.Type.toInt(((SqlEntryItem)item).getType()));
     values.put(COL_KEY, cipher.encrypt(context.getString(R.string.blowfish_cipher_key), item.getKey()));
     values.put(COL_VALUE, cipher.encrypt(context.getString(R.string.blowfish_cipher_key), item.getValue()));
     return item.setId(bdd().insert(table, null, values));
   }
   
-  private int update(final String table, SqlTableItem item) throws Exception {
+  private int update(final String table, SqlItem item) throws Exception {
     final ContentValues values = new ContentValues();
-    if(table.equals(TABLE_ENTRIES))
-      values.put(COL_TYPE, SqlTableItem.Type.toInt(item.getType()));
+    if(SqlNameItem.class.isInstance(item))
+      values.put(COL_TYPE, SqlNameItem.Type.toInt(((SqlNameItem)item).getType()));
+    else if(SqlEntryItem.class.isInstance(item))
+      values.put(COL_TYPE, SqlEntryItem.Type.toInt(((SqlEntryItem)item).getType()));
     values.put(COL_KEY, cipher.encrypt(context.getString(R.string.blowfish_cipher_key), item.getKey()));
     values.put(COL_VALUE, cipher.encrypt(context.getString(R.string.blowfish_cipher_key), item.getValue()));
     return bdd().update(table, values, COL_ID + " = " + item.getId(), null);
   }
 
-  private List<SqlTableItem> select(final String table, final String key) throws Exception {
+  private List<SqlItem> select(final String table, final String key) throws Exception {
     String query = "SELECT  * FROM " + table;
     if(key != null)
       query += " WHERE " + COL_KEY + "= '" + cipher.encrypt(context.getString(R.string.blowfish_cipher_key), key) + "'";
     return query(query, table.equals(TABLE_ENTRIES));
   }
 
-  private List<SqlTableItem> query(final String query, boolean containsType) throws Exception {
-    final List<SqlTableItem> list = new ArrayList<>();
+  private List<SqlItem> query(final String query, boolean entries) throws Exception {
+    final List<SqlItem> list = new ArrayList<>();
     final Cursor c = bdd().rawQuery(query, null);
     if (c.moveToFirst()) {
       do {
-        SqlTableItem.Type type = SqlTableItem.Type.NONE;
-        if(containsType)
-          type = SqlTableItem.Type.fromInt(c.getInt(NUM_COL_TYPE));
-        final SqlTableItem kv = new SqlTableItem(c.getInt(NUM_COL_ID), type,
-          cipher.decrypt(context.getString(R.string.blowfish_cipher_key),c.getString(NUM_COL_KEY)),
-          cipher.decrypt(context.getString(R.string.blowfish_cipher_key),c.getString(NUM_COL_VAL)));
-        list.add(kv);
+        final String key = cipher.decrypt(context.getString(R.string.blowfish_cipher_key),c.getString(NUM_COL_KEY));
+        final String value = cipher.decrypt(context.getString(R.string.blowfish_cipher_key),c.getString(NUM_COL_VAL));
+        SqlItem it;
+        if(entries) {
+          SqlEntryItem.Type type = SqlEntryItem.Type.fromInt(c.getInt(NUM_COL_TYPE));
+          it = new SqlEntryItem(c.getInt(NUM_COL_ID), type, key, value);
+        } else {
+          SqlNameItem.Type type = SqlNameItem.Type.fromInt(c.getInt(NUM_COL_TYPE));
+          it = new SqlNameItem(c.getInt(NUM_COL_ID), type, key, value);
+        }
+        list.add(it);
       } while (c.moveToNext());
     }
     c.close();
-    Collections.sort(list, new Comparator<SqlTableItem>() {
+    Collections.sort(list, new Comparator<SqlItem>() {
       @Override
-      public int compare(final SqlTableItem lhs, final SqlTableItem rhs) {
+      public int compare(final SqlItem lhs, final SqlItem rhs) {
+        return lhs.getKey().compareTo(rhs.getKey());
+      }
+    });
+    return list;
+  }
+
+  private List<SqlNameItem> readNamesV1() throws Exception {
+    final List<SqlNameItem> list = new ArrayList<>();
+    final Cursor c = bdd().rawQuery("SELECT * FROM " + TABLE_LIST + "_v1", null);
+    if (c.moveToFirst()) {
+      do {
+        final String key = cipher.decrypt(context.getString(R.string.blowfish_cipher_key),c.getString(NUM_COL_KEY));
+        final String value = cipher.decrypt(context.getString(R.string.blowfish_cipher_key),c.getString(NUM_COL_VAL));
+        list.add(new SqlNameItem(c.getInt(NUM_COL_ID), SqlNameItem.Type.DISPLAY, key, value));
+      } while (c.moveToNext());
+    }
+    c.close();
+    Collections.sort(list, new Comparator<SqlItem>() {
+      @Override
+      public int compare(final SqlItem lhs, final SqlItem rhs) {
         return lhs.getKey().compareTo(rhs.getKey());
       }
     });

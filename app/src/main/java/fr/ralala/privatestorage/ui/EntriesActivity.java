@@ -35,10 +35,13 @@ import java.util.Locale;
 import fr.ralala.privatestorage.R;
 import fr.ralala.privatestorage.PrivateStorageApp;
 import fr.ralala.privatestorage.items.SpinnerIconItem;
+import fr.ralala.privatestorage.items.SqlItem;
+import fr.ralala.privatestorage.items.SqlNameItem;
 import fr.ralala.privatestorage.sql.SqlFactory;
 import fr.ralala.privatestorage.ui.adapters.SpinnerIconArrayAdapter;
+import fr.ralala.privatestorage.ui.adapters.SqlEntriesArrayAdapter;
 import fr.ralala.privatestorage.ui.adapters.SqlItemArrayAdapter;
-import fr.ralala.privatestorage.items.SqlTableItem;
+import fr.ralala.privatestorage.items.SqlEntryItem;
 import fr.ralala.privatestorage.ui.login.LoginActivity;
 import fr.ralala.privatestorage.utils.Sys;
 import fr.ralala.privatestorage.ui.utils.UI;
@@ -60,9 +63,10 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
 
   private SqlFactory sql = null;
   private SqlItemArrayAdapter adapter = null;
-  private SqlTableItem currentItem = null;
-  private SqlTableItem owner = null;
+  private SqlEntryItem currentItem = null;
+  private SqlNameItem owner = null;
   private EditText searchET = null;
+
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -87,8 +91,8 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
     ListViewCompat list = (ListViewCompat)findViewById(R.id.content_form);
     list.setOnItemLongClickListener(this);
     try {
-      adapter = new SqlItemArrayAdapter(this,
-        R.layout.menu_list_item_3, sql.getEntries(owner), this, true, R.menu.popup_listview_form);
+      adapter = new SqlEntriesArrayAdapter(this,
+        R.layout.menu_list_item_3, sql.getEntries(owner), this, R.menu.popup_listview_form);
       list.setAdapter(adapter);
     } catch(Exception e) {
       Log.e(getClass().getSimpleName(), "SQL: " + e.getMessage(), e);
@@ -113,6 +117,20 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
     // add the custom view to the action bar
     if(actionBar != null) {
       actionBar.setCustomView(R.layout.actionbar_view_entries);
+      final ImageView iview = ((ImageView) actionBar.getCustomView().findViewById(R.id.view));
+      iview.setImageResource(owner.getType() == SqlNameItem.Type.DISPLAY ? R.mipmap.ic_menu_view : R.mipmap.ic_menu_unview);
+      adapter.setViewAll(owner.getType() == SqlNameItem.Type.DISPLAY);
+      iview.setOnClickListener(new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+          if(adapter.isViewAll()) {
+            iview.setImageResource(R.mipmap.ic_menu_unview);
+          } else {
+            iview.setImageResource(R.mipmap.ic_menu_view);
+          }
+          adapter.setViewAll(!adapter.isViewAll());
+        }
+      });
       ImageView iv = ((ImageView) actionBar.getCustomView().findViewById(R.id.icon));
       iv.setOnClickListener(new View.OnClickListener() {
         @Override
@@ -129,6 +147,8 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
           final String text = searchET.getText().toString()
             .toLowerCase(Locale.getDefault());
           adapter.filter(text);
+          if(text.isEmpty() && !adapter.isViewAll())
+            adapter.setViewAll(adapter.isViewAll()); /* force refresh */
         }
 
         @Override
@@ -179,7 +199,7 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
 
   @Override
   public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-    SqlTableItem item = adapter.getItem(position);
+    SqlEntryItem item = (SqlEntryItem)adapter.getItem(position);
     if(item != null) {
       switch (item.getType()) {
         case EMAIL:
@@ -207,7 +227,7 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
 
   public boolean inputText3(int reqId, int type, String text1, String text2) {
     if(!text1.isEmpty() && !text2.isEmpty()) {
-      SqlTableItem sti = new SqlTableItem(currentItem == null ? 0 : currentItem.getId(), SqlTableItem.Type.fromInt(type + 1), text1, text2);
+      SqlEntryItem sti = new SqlEntryItem(currentItem == null ? 0 : currentItem.getId(), SqlEntryItem.Type.fromInt(type + 1), text1, text2);
 
       switch (sti.getType()) {
         case EMAIL:
@@ -272,19 +292,19 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
   }
 
 
-  public void onMenuEdit(SqlTableItem t) {
-    currentItem = t;
-    showInputDialog3(R.string.new_entry_title, R.string.new_entry_hint_key, R.string.new_entry_hint_value, t.getType(), t.getKey(), t.getValue(), REQ_ID_EDIT);
+  public void onMenuEdit(SqlItem t) {
+    currentItem = (SqlEntryItem)t;
+    showInputDialog3(R.string.new_entry_title, R.string.new_entry_hint_key, R.string.new_entry_hint_value, currentItem.getType(), t.getKey(), t.getValue(), REQ_ID_EDIT);
   }
 
-  public void onMenuDelete(final SqlTableItem t) {
+  public void onMenuDelete(final SqlItem t) {
     UI.showConfirmDialog(this, R.string.confirm_delete_name_title, R.string.confirm_delete_name_message,
       new View.OnClickListener() {
         @Override
         public void onClick(View view) {
           try {
             adapter.remove(t);
-            sql.deleteEntry(owner, t);
+            sql.deleteEntry(owner, (SqlEntryItem)t);
           } catch(Exception e) {
             Log.e(getClass().getSimpleName(), "SQL: " + e.getMessage(), e);
             UI.showAlertDialog(EntriesActivity.this, R.string.error, "SQL: " + e.getMessage());
@@ -295,10 +315,10 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
 
 
   public void showInputDialog3(final int title, final int hint1, final int hint2, final int reqId) {
-    showInputDialog3(title, hint1, hint2, SqlTableItem.Type.TEXT, null, null, reqId);
+    showInputDialog3(title, hint1, hint2, SqlEntryItem.Type.TEXT, null, null, reqId);
   }
 
-  public void showInputDialog3(final int title, final int hint1, final int hint2, final SqlTableItem.Type type, final String def1, final String def2, final int reqId) {
+  public void showInputDialog3(final int title, final int hint1, final int hint2, final SqlEntryItem.Type type, final String def1, final String def2, final int reqId) {
     AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
     builder.setTitle(title);
@@ -322,7 +342,7 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
     list.add(new SpinnerIconItem(R.mipmap.ic_compose, getString(R.string.compose)));
     final SpinnerIconArrayAdapter ladapter = new SpinnerIconArrayAdapter(this, list);
     spinner.setAdapter(ladapter);
-    spinner.setSelection(SqlTableItem.Type.toInt(type) - 1);
+    spinner.setSelection(SqlEntryItem.Type.toInt(type) - 1);
     spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
       @Override
       public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {

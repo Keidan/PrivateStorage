@@ -13,7 +13,6 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="edit">Edit</string>
-    <string name="rename">Rename</string>
     <string name="text_copied">The text is copied to the clipboard</string>
     <string name="delete">Delete</string>
     <string name="cancel">Cancel</string>
@@ -29,6 +28,7 @@
     <string name="on_double_back_logout_text">Press once again to logout.</string>
 	<string name="exception">Exception</string>
     <string name="error">Error</string>
+    <string name="error_db_update">Unable to update the database</string>
     <string name="error_invalid_token_value">Invalid password.</string>
     <string name="error_token_not_match">The passwords do not match.</string>
     <string name="confirm_erase_config">Are you sure you want to erase the config?</string>
@@ -41,12 +41,16 @@
     <string name="error_invalid_url">Invalid URL entry.</string>
     <string name="permissions">The application requires permissions.</string>
     <string name="already_inserted">Entry already present.</string>
-    <string name="new_data_title">Enter a new entry name</string>
+    <string name="new_data_title">New entry</string>
+    <string name="update_data_title">Update entry</string>
     <string name="confirm_delete_name_title">Confirm delete</string>
     <string name="confirm_delete_name_message">This action also causes the deletion of the associated elements.</string>
     <string name="new_entry_title">New entry</string>
     <string name="new_entry_hint_key">Name</string>
     <string name="new_entry_hint_value">Value</string>
+    <string name="view">Show entries when opening</string>
+    <string name="unview">Hide entries when opening</string>
+    <string name="name">Name</string>
     <string name="email">Email</string>
     <string name="url">URL</string>
     <string name="phone">Phone</string>
@@ -69,4 +73,5 @@
     <string name="box_select_db_file">Select</string>
     <string name="error_no_files">No file found !</string>
     <string name="pref_title_device">Device</string>
+    <string name="restart_from_db_update_vn">Database updated to version</string>
 </resources>

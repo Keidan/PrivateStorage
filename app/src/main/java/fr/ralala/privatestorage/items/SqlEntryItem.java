@@ -9,10 +9,7 @@ package fr.ralala.privatestorage.items;
  *
  *******************************************************************************
  */
-public class SqlTableItem {
-  private long id = 0;
-  private String key = null;
-  private String value = null;
+public class SqlEntryItem extends SqlItem{
   private Type type = Type.NONE;
 
   public enum Type {
@@ -62,30 +59,22 @@ public class SqlTableItem {
     }
   }
 
-  public SqlTableItem(Type type, String key, String value) {
+  public SqlEntryItem(Type type, String key, String value) {
     this(0, type, key, value);
   }
 
-  public SqlTableItem(long id, Type type, String key, String value) {
-    this.id = id;
-    this.key = key;
-    this.value = value;
+  public SqlEntryItem(long id, Type type, String key, String value) {
+    setId(id);
+    setKey(key);
+    setValue(value);
     this.type = type;
   }
 
-  public void set(SqlTableItem sti) {
-    setId(sti.id);
-    setKey(sti.key);
-    setValue(sti.value);
+  public void set(SqlEntryItem sti) {
+    setId(sti.getId());
+    setKey(sti.getKey());
+    setValue(sti.getValue());
     setType(sti.type);
-  }
-
-  public long getId() {
-    return id;
-  }
-
-  public long setId(long id) {
-    return this.id = id;
   }
 
   public Type getType() {
@@ -94,25 +83,5 @@ public class SqlTableItem {
 
   public void setType(Type type) {
     this.type = type;
-  }
-
-  public String getKey() {
-    return key;
-  }
-
-  public void setKey(String key) {
-    this.key = key;
-  }
-
-  public String getValue() {
-    return value == null ? "" : value;
-  }
-
-  public void setValue(String value) {
-    this.value = value;
-  }
-
-  public String toString() {
-    return key + "=" + value;
   }
 }
