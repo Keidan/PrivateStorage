@@ -10,7 +10,7 @@ This application allows to create data binders by linking them to predefined act
 - Launch the default e-mail client
 
 
-Except for actions, all data is stored using blowfish algorithm.
+Except for actions, all data are stored using blowfish algorithm.
 
 
 Instructions
