@@ -61,7 +61,7 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
   private static final int REQ_ID_EDIT = 1;
 
   private SqlFactory sql = null;
-  private SqlItemArrayAdapter adapter = null;
+  private SqlEntriesArrayAdapter adapter = null;
   private SqlEntryItem currentItem = null;
   private SqlNameItem owner = null;
   private EditText searchET = null;
@@ -209,6 +209,11 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
           ((Vibrator) getSystemService(VIBRATOR_SERVICE)).vibrate(50);
           Sys.openDialer(this, item.getValue());
           break;
+        case PASSWORD:
+          ((Vibrator) getSystemService(VIBRATOR_SERVICE)).vibrate(50);
+          TextView tv = (TextView)view.findViewById(R.id.value);
+          adapter.setValueVisible(tv.getText().toString().equals(item.getValue()) ? -1 : position);
+          break;
         case COMPOSE:
         case TEXT:
           ((Vibrator) getSystemService(VIBRATOR_SERVICE)).vibrate(50);
@@ -339,6 +344,7 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
     list.add(new SpinnerIconItem(R.mipmap.ic_phone, getString(R.string.phone)));
     list.add(new SpinnerIconItem(R.mipmap.ic_copy, getString(R.string.text)));
     list.add(new SpinnerIconItem(R.mipmap.ic_compose, getString(R.string.compose)));
+    list.add(new SpinnerIconItem(R.mipmap.ic_password, getString(R.string.password)));
     final SpinnerIconArrayAdapter ladapter = new SpinnerIconArrayAdapter(this, list);
     spinner.setAdapter(ladapter);
     spinner.setSelection(SqlEntryItem.Type.toInt(type) - 1);
@@ -361,6 +367,9 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
               break;
             case R.mipmap.ic_compose:
               input2.setInputType(InputType.TYPE_CLASS_NUMBER);
+              break;
+            case R.mipmap.ic_password:
+              input2.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
               break;
             default:
               input2.setInputType(InputType.TYPE_CLASS_TEXT);

@@ -18,7 +18,8 @@ public class SqlEntryItem extends SqlItem{
     URL,
     PHONE,
     TEXT,
-    COMPOSE;
+    COMPOSE,
+    PASSWORD;
 
     public static Type fromInt(int i) {
       switch (i) {
@@ -34,6 +35,8 @@ public class SqlEntryItem extends SqlItem{
           return Type.TEXT;
         case 5:
           return Type.COMPOSE;
+        case 6:
+          return Type.PASSWORD;
         default:
           return Type.TEXT;
       }
@@ -53,6 +56,8 @@ public class SqlEntryItem extends SqlItem{
           return 4;
         case COMPOSE:
           return 5;
+        case PASSWORD:
+          return 6;
         default:
           return 4;
       }

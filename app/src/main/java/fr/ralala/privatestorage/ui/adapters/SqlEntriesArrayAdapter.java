@@ -16,7 +16,6 @@ import java.util.List;
 import fr.ralala.privatestorage.R;
 import fr.ralala.privatestorage.items.SqlEntryItem;
 import fr.ralala.privatestorage.items.SqlItem;
-import fr.ralala.privatestorage.items.SqlNameItem;
 import fr.ralala.privatestorage.ui.utils.UI;
 
 /**
@@ -29,6 +28,7 @@ import fr.ralala.privatestorage.ui.utils.UI;
  *******************************************************************************
  */
 public class SqlEntriesArrayAdapter extends SqlItemArrayAdapter {
+  private int valueVisible = -1;
 
   private class ViewHolder {
     TextView key = null;
@@ -63,6 +63,8 @@ public class SqlEntriesArrayAdapter extends SqlItemArrayAdapter {
       holder = (ViewHolder) v.getTag();
     }
     holder.key.setText(t.getKey());
+
+    Log.e("TAG", "valueVisible:"+valueVisible);
     holder.value.setText(t.getValue());
 
     if(SqlEntryItem.class.isInstance(t)) {
@@ -80,6 +82,12 @@ public class SqlEntriesArrayAdapter extends SqlItemArrayAdapter {
         case COMPOSE:
           holder.type.setImageResource(R.mipmap.ic_compose);
           break;
+        case PASSWORD: {
+          holder.type.setImageResource(R.mipmap.ic_password);
+          String val = t.getValue();
+          holder.value.setText(valueVisible == -1 ? val.replaceAll("(?s).", "*") : val);
+          break;
+        }
         case TEXT:
           holder.type.setImageResource(R.mipmap.ic_copy);
           break;
@@ -118,5 +126,10 @@ public class SqlEntriesArrayAdapter extends SqlItemArrayAdapter {
       Log.e(getClass().getSimpleName(), "Exception: " + e.getMessage(), e);
     }
     return v;
+  }
+
+  public void setValueVisible(int valueVisible) {
+    this.valueVisible = valueVisible;
+    notifyDataSetChanged();
   }
 }
