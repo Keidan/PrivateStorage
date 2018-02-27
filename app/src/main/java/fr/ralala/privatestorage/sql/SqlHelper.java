@@ -26,14 +26,11 @@ import java.util.Locale;
 public class SqlHelper extends SQLiteOpenHelper implements SqlConstants {
 
   private String getTableDef(final String name) {
-    StringBuilder sb = new StringBuilder();
-    sb.append("CREATE TABLE IF NOT EXISTS ").append(name).append(" (")
-      .append(COL_ID).append(" INTEGER PRIMARY KEY AUTOINCREMENT, ")
-      .append(COL_KEY).append(" TEXT NOT NULL, ")
-      .append(COL_VALUE).append(" TEXT NOT NULL");
-      sb.append(", ").append(COL_TYPE).append(" INTEGER");
-    sb.append(");");
-    return sb.toString();
+    String sb = "CREATE TABLE IF NOT EXISTS " + name + " ("
+      + COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+        + COL_KEY + " TEXT NOT NULL, " + COL_VALUE + " TEXT NOT NULL";
+     sb += ", " + COL_TYPE + " INTEGER" + ");";
+    return sb;
   }
   
   SqlHelper(final Context context, final String name,
@@ -66,7 +63,7 @@ public class SqlHelper extends SQLiteOpenHelper implements SqlConstants {
                                     final String folder) throws Exception {
     return copyDatabase(c, name, folder, name, true);
   }
-  public static String copyDatabase(final Context c, final String name,
+  private static String copyDatabase(final Context c, final String name,
                                     final String folder,
                                     final String filename, boolean date) throws Exception{
     final String databasePath = c.getDatabasePath(name).getPath();
@@ -81,7 +78,8 @@ public class SqlHelper extends SQLiteOpenHelper implements SqlConstants {
 
         final File directory = new File(folder);
         if (!directory.exists())
-          directory.mkdir();
+          if(!directory.mkdir())
+            Log.e(SqlHelper.class.getSimpleName(), "mkdir failed!");
         File out = new File(directory, !date ? filename : (new SimpleDateFormat("yyyyMMdd_hhmma", Locale.US).format(new Date()) + "_" + name));
         myOutput = new FileOutputStream(out);
         myInput = new FileInputStream(databasePath);

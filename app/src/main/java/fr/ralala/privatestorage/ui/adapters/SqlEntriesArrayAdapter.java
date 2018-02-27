@@ -85,7 +85,7 @@ public class SqlEntriesArrayAdapter extends SqlItemArrayAdapter {
         case PASSWORD: {
           holder.type.setImageResource(R.mipmap.ic_password);
           String val = t.getValue();
-          holder.value.setText(valueVisible == -1 ? val.replaceAll("(?s).", "*") : val);
+          holder.value.setText(valueVisible != position ? val.replaceAll("(?s).", "*") : val);
           break;
         }
         case TEXT:

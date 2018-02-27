@@ -3,6 +3,7 @@ package fr.ralala.privatestorage.ui.login;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Process;
+import android.support.design.widget.TextInputLayout;
 import android.support.v7.widget.Toolbar;
 import android.view.KeyEvent;
 import android.view.View;
@@ -41,30 +42,32 @@ public class LoginActivity extends DoubleBackActivity implements OnEditorActionL
       return;
     }
 
-    Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+    Toolbar toolbar = findViewById(R.id.toolbar);
     setSupportActionBar(toolbar);
 
     setContentView(R.layout.content_login);
 
-    tokenET = ((EditText) findViewById(R.id.tokenET));
+    tokenET = findViewById(R.id.tokenET);
     tokenET.setOnEditorActionListener(this);
   }
 
   public void onResume() {
     super.onResume();
     tokenET.setText("");
-    Button loginBT = (Button) findViewById(R.id.loginBT);
-    Button linkToForgotBT = (Button)findViewById(R.id.linkToForgotBT);
-    ImageView fingerprintIV = (ImageView) findViewById(R.id.fingerprintIV);
-    TextView fingerprintTVDisplay = (TextView) findViewById(R.id.fingerprintTVDisplay);
-    TextView tokenTV = (TextView) findViewById(R.id.tokenTV);
-    TextView fingerprintTV = (TextView) findViewById(R.id.fingerprintTV);
+    Button loginBT = findViewById(R.id.loginBT);
+    Button linkToForgotBT = findViewById(R.id.linkToForgotBT);
+    ImageView fingerprintIV = findViewById(R.id.fingerprintIV);
+    TextView fingerprintTVDisplay = findViewById(R.id.fingerprintTVDisplay);
+    TextView tokenTV = findViewById(R.id.tokenTV);
+    TextInputLayout tokenLayoutET = findViewById(R.id.tokenLayoutET);
+    TextView fingerprintTV = findViewById(R.id.fingerprintTV);
     FingerprintHandler helper = new FingerprintHandler(this, this);
     boolean useFingerprint = helper.loadAuthentication(getApp().getToken());
     int vF = useFingerprint ? View.VISIBLE : View.GONE;
     int vP = useFingerprint ? View.GONE : View.VISIBLE;
     tokenET.setVisibility(vP);
     tokenTV.setVisibility(vP);
+    tokenLayoutET.setVisibility(vP);
     loginBT.setVisibility(vP);
     linkToForgotBT.setVisibility(vP);
     fingerprintTV.setVisibility(vF);

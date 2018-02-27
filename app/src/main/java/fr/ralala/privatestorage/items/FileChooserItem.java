@@ -3,6 +3,7 @@ package fr.ralala.privatestorage.items;
 import java.util.Locale;
 
 import android.annotation.SuppressLint;
+import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 
 /**
@@ -15,39 +16,78 @@ import android.support.annotation.NonNull;
  *******************************************************************************
  */
 public class FileChooserItem implements Comparable<FileChooserItem> {
-  private String name;
-  private String data;
-  private String path;
-  private int icon;
+  private String mName;
+  private String mData;
+  private String mPath;
+  private Drawable mIcon;
+  private boolean mPreview;
 
-  public FileChooserItem(final String n, final String d, final String p, final int i) {
-    name = n;
-    data = d;
-    path = p;
-    icon = i;
+  /**
+   * Creates a new chooser option.
+   * @param n The option name.
+   * @param d The option data.
+   * @param p The option path.
+   * @param i The option icon.
+   * @param preview True for image preview.
+   */
+  public FileChooserItem(final String n, final String d, final String p, final Drawable i, boolean preview) {
+    mName = n;
+    mData = d;
+    mPath = p;
+    mIcon = i;
+    mPreview = preview;
   }
 
+  /**
+   * Returns true if a preview must be used.
+   * @return boolean
+   */
+  public boolean isPreview() {
+    return mPreview;
+  }
+
+  /**
+   * Returns the name.
+   * @return String
+   */
   public String getName() {
-    return name;
+    return mName;
   }
 
+  /**
+   * Returns the data.
+   * @return String
+   */
   public String getData() {
-    return data;
+    return mData;
   }
 
+  /**
+   * Returns the path.
+   * @return String
+   */
   public String getPath() {
-    return path;
+    return mPath;
   }
 
-  public int getIcon() {
-    return icon;
+  /**
+   * Returns the drawable icon.
+   * @return Drawable
+   */
+  public Drawable getIcon() {
+    return mIcon;
   }
 
+  /**
+   * Compares this instance to an other instance.
+   * @param o Instance to compare.
+   * @return int
+   */
   @SuppressLint("DefaultLocale")
   @Override
   public int compareTo(@NonNull final FileChooserItem o) {
-    if (this.name != null)
-      return this.name.toLowerCase(Locale.getDefault()).compareTo(
+    if (this.mName != null)
+      return this.mName.toLowerCase(Locale.getDefault()).compareTo(
           o.getName().toLowerCase());
     else
       throw new IllegalArgumentException();

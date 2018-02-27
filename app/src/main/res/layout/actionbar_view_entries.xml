@@ -1,35 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.percent.PercentRelativeLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
     <ImageView
         android:id="@+id/icon"
-        app:layout_widthPercent="10%"
+        android:layout_alignParentStart="true"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:contentDescription="@string/empty"
+        android:contentDescription="@null"
         android:src="@mipmap/ic_menu_back" />
 
     <EditText
         android:id="@+id/searchET"
-        app:layout_widthPercent="80%"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
+        android:layout_toEndOf="@+id/icon"
+        android:layout_toStartOf="@+id/view"
         android:hint="@string/search_hint"
         android:inputType="text"
         android:maxLines="1"
-        android:layout_toEndOf="@+id/icon"/>
+        android:imeOptions="actionSearch"/>
 
     <ImageView
         android:id="@+id/view"
-        app:layout_widthPercent="10%"
+        android:layout_alignParentEnd="true"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:contentDescription="@string/empty"
-        android:src="@mipmap/ic_menu_view"
-        android:layout_toEndOf="@+id/searchET"
-        android:layout_alignParentEnd="true" />
-</android.support.percent.PercentRelativeLayout>
+        android:contentDescription="@null"
+        android:src="@mipmap/ic_menu_view"/>
+</RelativeLayout>

@@ -1,7 +1,6 @@
 package fr.ralala.privatestorage.sql;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -132,7 +131,7 @@ public class SqlFactory implements SqlConstants {
   }
 
 
-  public boolean isTableExists(String tableName) {
+  private boolean isTableExists(String tableName) {
     Cursor cursor = bdd.rawQuery("select DISTINCT tbl_name from sqlite_master where tbl_name = '"+tableName+"'", null);
     if(cursor!=null) {
       if(cursor.getCount()>0) {
@@ -144,15 +143,15 @@ public class SqlFactory implements SqlConstants {
     return false;
   }
 
-  private int delete(final String table, SqlItem item) {
-    return delete(table, item.getId());
+  private void delete(final String table, SqlItem item) {
+    delete(table, item.getId());
   }
 
-  private int delete(final String table, long id) {
-    return bdd().delete(table, COL_ID + " = " + id, null);
+  private void delete(final String table, long id) {
+    bdd().delete(table, COL_ID + " = " + id, null);
   }
 
-  private long insert(final String table, SqlItem item) throws Exception {
+  private void insert(final String table, SqlItem item) throws Exception {
     final ContentValues values = new ContentValues();
     if(SqlNameItem.class.isInstance(item))
       values.put(COL_TYPE, SqlNameItem.Type.toInt(((SqlNameItem)item).getType()));
@@ -160,10 +159,10 @@ public class SqlFactory implements SqlConstants {
       values.put(COL_TYPE, SqlEntryItem.Type.toInt(((SqlEntryItem)item).getType()));
     values.put(COL_KEY, cipher.encrypt(context.getString(R.string.blowfish_cipher_key), item.getKey()));
     values.put(COL_VALUE, cipher.encrypt(context.getString(R.string.blowfish_cipher_key), item.getValue()));
-    return item.setId(bdd().insert(table, null, values));
+    item.setId(bdd().insert(table, null, values));
   }
   
-  private int update(final String table, SqlItem item) throws Exception {
+  private void update(final String table, SqlItem item) throws Exception {
     final ContentValues values = new ContentValues();
     if(SqlNameItem.class.isInstance(item))
       values.put(COL_TYPE, SqlNameItem.Type.toInt(((SqlNameItem)item).getType()));
@@ -171,7 +170,7 @@ public class SqlFactory implements SqlConstants {
       values.put(COL_TYPE, SqlEntryItem.Type.toInt(((SqlEntryItem)item).getType()));
     values.put(COL_KEY, cipher.encrypt(context.getString(R.string.blowfish_cipher_key), item.getKey()));
     values.put(COL_VALUE, cipher.encrypt(context.getString(R.string.blowfish_cipher_key), item.getValue()));
-    return bdd().update(table, values, COL_ID + " = " + item.getId(), null);
+    bdd().update(table, values, COL_ID + " = " + item.getId(), null);
   }
 
   private List<SqlItem> select(final String table, final String key) throws Exception {
@@ -200,12 +199,7 @@ public class SqlFactory implements SqlConstants {
       } while (c.moveToNext());
     }
     c.close();
-    Collections.sort(list, new Comparator<SqlItem>() {
-      @Override
-      public int compare(final SqlItem lhs, final SqlItem rhs) {
-        return lhs.getKey().compareTo(rhs.getKey());
-      }
-    });
+    list.sort(Comparator.comparing(SqlItem::getKey));
     return list;
   }
 
@@ -220,12 +214,7 @@ public class SqlFactory implements SqlConstants {
       } while (c.moveToNext());
     }
     c.close();
-    Collections.sort(list, new Comparator<SqlItem>() {
-      @Override
-      public int compare(final SqlItem lhs, final SqlItem rhs) {
-        return lhs.getKey().compareTo(rhs.getKey());
-      }
-    });
+    list.sort(Comparator.comparing(SqlItem::getKey));
     return list;
   }
   

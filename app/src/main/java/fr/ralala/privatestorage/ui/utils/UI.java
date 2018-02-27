@@ -1,12 +1,18 @@
 package fr.ralala.privatestorage.ui.utils;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.PopupMenu;
+import android.util.TypedValue;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -29,6 +35,38 @@ import fr.ralala.privatestorage.R;
  *******************************************************************************
  */
 public class UI {
+
+  /**
+   * Returns the res ID from the attributes.
+   * @param activity The context Activity.
+   * @param attr The attribute ID.
+   * @return int
+   */
+  public static int getResIdFromAttribute(final Activity activity, final int attr) {
+    if(attr==0)
+      return 0;
+    final TypedValue typedvalueattr = new TypedValue();
+    activity.getTheme().resolveAttribute(attr,typedvalueattr,true);
+    return typedvalueattr.resourceId;
+  }
+
+  /**
+   * Displays a progress dialog.
+   * @param context The Android context.
+   * @param message The progress message.
+   * @return AlertDialog
+   */
+  public static AlertDialog showProgressDialog(Context context, int message) {
+    LayoutInflater layoutInflater = LayoutInflater.from(context);
+    final ViewGroup nullParent = null;
+    View view = layoutInflater.inflate(R.layout.progress_dialog, nullParent);
+    AlertDialog progress = new AlertDialog.Builder(context).create();
+    TextView tv = view.findViewById(R.id.text);
+    tv.setText(message);
+    progress.setCancelable(false);
+    progress.setView(view);
+    return progress;
+  }
 
   public static void forcePopupMenuIcons(final PopupMenu popup) {
     try {
@@ -59,12 +97,7 @@ public class UI {
     AlertDialog alertDialog = new AlertDialog.Builder(c).create();
     alertDialog.setTitle(c.getResources().getString(title));
     alertDialog.setMessage(message);
-    alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, c.getResources().getString(R.string.ok),
-      new DialogInterface.OnClickListener() {
-        public void onClick(DialogInterface dialog, int which) {
-          dialog.dismiss();
-        }
-      });
+    alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, c.getResources().getString(R.string.ok), (dialog, which) -> dialog.dismiss());
     alertDialog.show();
   }
   public static void showConfirmDialog(final Context c, final int title,
@@ -80,26 +113,26 @@ public class UI {
       .setTitle(title)
       .setMessage(message)
       .setIcon(android.R.drawable.ic_dialog_alert)
-      .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-        public void onClick(DialogInterface  dialog, int whichButton) {
-          if(yes != null) yes.onClick(null);
-        }})
-      .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
-        public void onClick(DialogInterface dialog, int whichButton) {
-          if(no != null) no.onClick(null);
-        }}).show();
+      .setPositiveButton(android.R.string.yes, (dialog, which) -> {
+        if(yes != null) yes.onClick(null);
+      })
+      .setNegativeButton(android.R.string.no, (dialog, which) -> {
+        if(no != null) no.onClick(null);
+      }).show();
   }
 
-  public static void toast(final Context c, final String message, final int timer) {
+  private static void toast(final Context c, final String message, final int timer) {
     /* Create a toast with the launcher icon */
     Toast toast = Toast.makeText(c, message, timer);
-    TextView tv = (TextView) toast.getView().findViewById(android.R.id.message);
+    TextView tv = toast.getView().findViewById(android.R.id.message);
     if (null!=tv) {
-      Drawable drawable = c.getResources().getDrawable(R.mipmap.ic_launcher);
-      final Bitmap b = ((BitmapDrawable) drawable).getBitmap();
-      final Bitmap bitmapResized = Bitmap.createScaledBitmap(b, 32, 32, false);
-      tv.setCompoundDrawablesWithIntrinsicBounds(new BitmapDrawable(c.getResources(), bitmapResized), null, null, null);
-      tv.setCompoundDrawablePadding(5);
+      Drawable drawable = ContextCompat.getDrawable(c, R.mipmap.ic_launcher);
+      if(drawable != null) {
+        final Bitmap b = ((BitmapDrawable) drawable).getBitmap();
+        final Bitmap bitmapResized = Bitmap.createScaledBitmap(b, 32, 32, false);
+        tv.setCompoundDrawablesWithIntrinsicBounds(new BitmapDrawable(c.getResources(), bitmapResized), null, null, null);
+        tv.setCompoundDrawablePadding(5);
+      }
     }
     toast.show();
   }
@@ -129,7 +162,7 @@ public class UI {
     public String name;
     public T value;
 
-    public ListItem(final String name, final T value) {
+    ListItem(final String name, final T value) {
       this.name = name;
       this.value = value;
     }
@@ -144,24 +177,17 @@ public class UI {
     builder.setIcon(android.R.drawable.ic_dialog_alert);
     List<ListItem> items = new ArrayList<>();
     for(T s : list) {
-      String ss = new File(s.toString()).getName().toString();
+      String ss = new File(s.toString()).getName();
       if(ss.endsWith("\"}")) ss = ss.substring(0, ss.length() - 2);
-      items.add(new ListItem<T>(ss, s));
+      items.add(new ListItem<>(ss, s));
     }
     final ArrayAdapter<ListItem> arrayAdapter = new ArrayAdapter<>(c, android.R.layout.select_dialog_singlechoice, items);
-    builder.setNegativeButton(c.getString(R.string.cancel), new DialogInterface.OnClickListener() {
-      @Override
-      public void onClick(DialogInterface dialog, int which) {
-        dialog.dismiss();
-      }
-    });
+    builder.setNegativeButton(c.getString(R.string.cancel), (dialog, which) -> dialog.dismiss());
 
-    builder.setAdapter(arrayAdapter, new DialogInterface.OnClickListener() {
-      @Override
-      public void onClick(DialogInterface dialog, int which) {
-        dialog.dismiss();
-        if(yes != null) yes.onClick(arrayAdapter.getItem(which).value);
-      }
+    builder.setAdapter(arrayAdapter, (dialog, which) -> {
+      dialog.dismiss();
+      if(yes != null) //noinspection ConstantConditions,unchecked
+        yes.onClick(arrayAdapter.getItem(which).value);
     });
     builder.show();
   }

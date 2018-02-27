@@ -13,8 +13,6 @@ import android.view.MenuItem;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,8 +20,6 @@ import java.util.Set;
 
 import fr.ralala.privatestorage.R;
 import fr.ralala.privatestorage.PrivateStorageApp;
-import fr.ralala.privatestorage.ui.filechooser.AbstractFileChooserActivity;
-import fr.ralala.privatestorage.ui.filechooser.FileChooserActivity;
 import fr.ralala.privatestorage.sql.SqlHelper;
 import fr.ralala.privatestorage.ui.login.LoginActivity;
 import fr.ralala.privatestorage.utils.Sys;
@@ -54,16 +50,15 @@ public class SettingsActivity extends PreferenceActivity implements Preference.O
       .replace(android.R.id.content, prefFrag).commit();
     getFragmentManager().executePendingTransactions();
     android.support.v7.app.ActionBar actionBar = AppCompatDelegate.create(this, null).getSupportActionBar();
-    actionBar.setDisplayShowHomeEnabled(true);
-    actionBar.setDisplayHomeAsUpEnabled(true);
-
+    if(actionBar != null) {
+      actionBar.setDisplayShowHomeEnabled(true);
+      actionBar.setDisplayHomeAsUpEnabled(true);
+    }
     prefFrag.findPreference(PREFS_KEY_EXPORT_TO_DEVICE).setOnPreferenceClickListener(this);
     prefFrag.findPreference(PREFS_KEY_IMPORT_FROM_DEVICE).setOnPreferenceClickListener(this);
-    prefFrag.findPreference(PREFS_KEY_SECURITY_PARANOIAC).setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-      public boolean onPreferenceChange(Preference preference, Object newValue) {
-        ((PrivateStorageApp)getApplicationContext()).setParanoiacMode(""+newValue);
-        return true;
-      }
+    prefFrag.findPreference(PREFS_KEY_SECURITY_PARANOIAC).setOnPreferenceChangeListener((preference, newValue) -> {
+      ((PrivateStorageApp)getApplicationContext()).setParanoiacMode(""+newValue);
+      return true;
     });
     ((PrivateStorageApp)getApplicationContext()).setFrom(NamesActivity.class);
   }
@@ -104,21 +99,21 @@ public class SettingsActivity extends PreferenceActivity implements Preference.O
   public boolean onPreferenceClick(final Preference preference) {
     if (preference.equals(prefFrag.findPreference(PREFS_KEY_EXPORT_TO_DEVICE))) {
       Map<String, String> extra = new HashMap<>();
-      extra.put(AbstractFileChooserActivity.FILECHOOSER_TYPE_KEY, "" + AbstractFileChooserActivity.FILECHOOSER_TYPE_DIRECTORY_ONLY);
-      extra.put(AbstractFileChooserActivity.FILECHOOSER_TITLE_KEY, getString(R.string.pref_title_export));
-      extra.put(AbstractFileChooserActivity.FILECHOOSER_MESSAGE_KEY, getString(R.string.use_folder) + ":? ");
-      extra.put(AbstractFileChooserActivity.FILECHOOSER_DEFAULT_DIR, Environment
+      extra.put(FileChooserActivity.FILECHOOSER_TYPE_KEY, "" + FileChooserActivity.FILECHOOSER_TYPE_DIRECTORY_ONLY);
+      extra.put(FileChooserActivity.FILECHOOSER_TITLE_KEY, getString(R.string.pref_title_export));
+      extra.put(FileChooserActivity.FILECHOOSER_MESSAGE_KEY, getString(R.string.use_folder) + ":? ");
+      extra.put(FileChooserActivity.FILECHOOSER_DEFAULT_DIR, Environment
         .getExternalStorageDirectory().getAbsolutePath());
-      extra.put(AbstractFileChooserActivity.FILECHOOSER_SHOW_KEY, "" + AbstractFileChooserActivity.FILECHOOSER_SHOW_DIRECTORY_ONLY);
+      extra.put(FileChooserActivity.FILECHOOSER_SHOW_KEY, "" + FileChooserActivity.FILECHOOSER_SHOW_DIRECTORY_ONLY);
       myStartActivity(extra, FileChooserActivity.class, FileChooserActivity.FILECHOOSER_SELECTION_TYPE_DIRECTORY);
     } else if (preference.equals(prefFrag.findPreference(PREFS_KEY_IMPORT_FROM_DEVICE))) {
       Map<String, String> extra = new HashMap<>();
-      extra.put(AbstractFileChooserActivity.FILECHOOSER_TYPE_KEY, "" + AbstractFileChooserActivity.FILECHOOSER_TYPE_FILE_AND_DIRECTORY);
-      extra.put(AbstractFileChooserActivity.FILECHOOSER_TITLE_KEY, getString(R.string.pref_title_import));
-      extra.put(AbstractFileChooserActivity.FILECHOOSER_MESSAGE_KEY, getString(R.string.use_file) + ":? ");
-      extra.put(AbstractFileChooserActivity.FILECHOOSER_DEFAULT_DIR, Environment
+      extra.put(FileChooserActivity.FILECHOOSER_TYPE_KEY, "" + FileChooserActivity.FILECHOOSER_TYPE_FILE_AND_DIRECTORY);
+      extra.put(FileChooserActivity.FILECHOOSER_TITLE_KEY, getString(R.string.pref_title_import));
+      extra.put(FileChooserActivity.FILECHOOSER_MESSAGE_KEY, getString(R.string.use_file) + ":? ");
+      extra.put(FileChooserActivity.FILECHOOSER_DEFAULT_DIR, Environment
         .getExternalStorageDirectory().getAbsolutePath());
-      extra.put(AbstractFileChooserActivity.FILECHOOSER_SHOW_KEY, "" + AbstractFileChooserActivity.FILECHOOSER_SHOW_FILE_AND_DIRECTORY);
+      extra.put(FileChooserActivity.FILECHOOSER_SHOW_KEY, "" + FileChooserActivity.FILECHOOSER_SHOW_FILE_AND_DIRECTORY);
       myStartActivity(extra, FileChooserActivity.class, FileChooserActivity.FILECHOOSER_SELECTION_TYPE_FILE);
     }
     return true;
@@ -147,12 +142,7 @@ public class SettingsActivity extends PreferenceActivity implements Preference.O
           if(f.getName().endsWith(".sqlite3"))
             files.add(f);
         }
-        Collections.sort(files, new Comparator<File>() {
-          @Override
-          public int compare(File f1, File f2) {
-            return Long.valueOf(f1.lastModified()).compareTo(f2.lastModified()) ;
-          }
-        });
+        files.sort((f1, f2) -> Long.valueOf(f1.lastModified()).compareTo(f2.lastModified()));
 
         computeAndLoad(this, files, new UI.AlertDialogListListener<String>() {
           @Override

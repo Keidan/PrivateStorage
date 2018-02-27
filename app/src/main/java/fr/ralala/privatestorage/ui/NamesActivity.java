@@ -1,10 +1,12 @@
 package fr.ralala.privatestorage.ui;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Process;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.TextInputEditText;
+import android.support.design.widget.TextInputLayout;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.ListViewCompat;
 import android.text.InputType;
@@ -14,7 +16,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -57,19 +58,21 @@ public class NamesActivity extends DoubleBackActivity implements AdapterView.OnI
     super.onCreate(savedInstanceState);
     /* Disable back button */
     try {
-      getSupportActionBar().setDisplayShowCustomEnabled(false);
-      getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-      getSupportActionBar().setTitle(R.string.app_name);
+      ActionBar ab = getSupportActionBar();
+      if (ab != null) {
+        ab.setDisplayShowCustomEnabled(false);
+        ab.setDisplayHomeAsUpEnabled(false);
+        ab.setTitle(R.string.app_name);
+      }
     } catch(Exception e) {
       Log.e(getClass().getSimpleName(), "Exception " + e.getMessage(), e);
-
     }
     if (getIntent().getBooleanExtra("EXIT", false)) {
       finish();
       return;
     }
     setContentView(R.layout.activity_names);
-    ListViewCompat list = (ListViewCompat)findViewById(R.id.content_names);
+    ListViewCompat list = findViewById(R.id.content_names);
     try {
       adapter = new SqlNamesArrayAdapter(this,
         R.layout.menu_list_item_2, getSql().getNames(), this, R.menu.popup_listview_names);
@@ -78,16 +81,12 @@ public class NamesActivity extends DoubleBackActivity implements AdapterView.OnI
     } catch(Exception e) {
       Log.e(getClass().getSimpleName(), "SQL: " + e.getMessage(), e);
       UI.showAlertDialog(this, R.string.error, "SQL: " + e.getMessage());
-      return;
     }
 
-    FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-    fab.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View view) {
-        currentItem = null;
-        showInputDialog2(R.string.new_data_title, SqlNameItem.Type.DISPLAY, null, REQ_ID_ADD);
-      }
+    FloatingActionButton fab = findViewById(R.id.fab);
+    fab.setOnClickListener((view) -> {
+      currentItem = null;
+      showInputDialog2(R.string.new_data_title, SqlNameItem.Type.DISPLAY, null, REQ_ID_ADD);
     });
     ((PrivateStorageApp)getApplicationContext()).setFrom(this.getClass());
 
@@ -136,7 +135,7 @@ public class NamesActivity extends DoubleBackActivity implements AdapterView.OnI
       } catch(Exception e) {
         Log.e(getClass().getSimpleName(), "SQL: " + e.getMessage(), e);
         UI.showAlertDialog(this, R.string.error, "SQL: " + e.getMessage());
-        finish();
+        //finish();
         return false;
       }
       return true;
@@ -183,12 +182,9 @@ public class NamesActivity extends DoubleBackActivity implements AdapterView.OnI
   }
 
   public void onMenuDelete(final SqlItem t) {
-    UI.showConfirmDialog(this, R.string.confirm_delete_name_title, R.string.confirm_delete_name_message, new View.OnClickListener() {
-      @Override
-      public void onClick(View view) {
-        adapter.remove(t);
-        getSql().deleteName((SqlNameItem)t);
-      }
+    UI.showConfirmDialog(this, R.string.confirm_delete_name_title, R.string.confirm_delete_name_message, (view) -> {
+      adapter.remove(t);
+      getSql().deleteName((SqlNameItem)t);
     }, null);
   }
 
@@ -204,7 +200,8 @@ public class NamesActivity extends DoubleBackActivity implements AdapterView.OnI
   public void showInputDialog2(final int title, final SqlNameItem.Type type, final String def, final int reqId) {
     AlertDialog.Builder builder = new AlertDialog.Builder(this);
     builder.setTitle(title);
-    final EditText input = new EditText(this);
+    final TextInputEditText input = new TextInputEditText(this);
+    final TextInputLayout inputLayout = new TextInputLayout(this);
     final Spinner spinner = new Spinner(this);
     input.setHint(R.string.name);
     if(def != null)
@@ -228,31 +225,26 @@ public class NamesActivity extends DoubleBackActivity implements AdapterView.OnI
 
     LinearLayout.LayoutParams lpTop = new LinearLayout.LayoutParams(
       LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+    LinearLayout.LayoutParams lpInput = new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
     /* int left, int top, int right, int bottom */
     lpTop.setMargins(20, 40, 0, 20);
     parent.addView(tv, lpTop);
     parent.addView(spinner, lp);
-    parent.addView(input, lp);
+    inputLayout.addView(input, 0, lpInput);
+    parent.addView(inputLayout, lp);
 
     builder.setView(parent);
     // Set up the buttons
     builder.setPositiveButton(getString(R.string.ok), null);
     builder.setNegativeButton(getString(R.string.cancel), null);
     final AlertDialog mAlertDialog = builder.create();
-    mAlertDialog.setOnShowListener(new DialogInterface.OnShowListener() {
-
-      @Override
-      public void onShow(DialogInterface dialog) {
-
-        Button b = mAlertDialog.getButton(AlertDialog.BUTTON_POSITIVE);
-        b.setOnClickListener(new View.OnClickListener() {
-          @Override
-          public void onClick(View view) {
-            if(inputText2(reqId, input.getText().toString(), spinner.getSelectedItemPosition()))
-              mAlertDialog.dismiss();
-          }
-        });
-      }
+    mAlertDialog.setOnShowListener((dialog) -> {
+      Button b = mAlertDialog.getButton(AlertDialog.BUTTON_POSITIVE);
+      b.setOnClickListener((view) -> {
+        if(inputText2(reqId, input.getText().toString(), spinner.getSelectedItemPosition()))
+          mAlertDialog.dismiss();
+      });
     });
     mAlertDialog.setCanceledOnTouchOutside(false);
     mAlertDialog.show();

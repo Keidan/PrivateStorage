@@ -37,12 +37,9 @@ public class ForgotActivity extends AppCompatActivity {
   }
   
   public void actionReset(final View v) {
-    final android.view.View.OnClickListener yes = new android.view.View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        sql.removeAll();
-        onBackPressed();
-      }
+    final android.view.View.OnClickListener yes = (vv) -> {
+      sql.removeAll();
+      onBackPressed();
     };
     UI.showConfirmDialog(this, R.string.reset,
         R.string.confirm_erase_config, yes, null);

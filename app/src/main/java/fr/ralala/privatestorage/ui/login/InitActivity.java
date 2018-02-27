@@ -30,8 +30,8 @@ public class InitActivity extends RuntimePermissionsActivity {
     super.onCreate(savedInstanceState);
     // Set View to init.xml
     setContentView(R.layout.content_init);
-    tokenET = ((EditText) findViewById(R.id.tokenET));
-    tokenConfirmET = ((EditText) findViewById(R.id.tokenConfirmET));
+    tokenET = findViewById(R.id.tokenET);
+    tokenConfirmET = findViewById(R.id.tokenConfirmET);
 
     String[] perms = new String[]{
       Manifest.permission.READ_EXTERNAL_STORAGE,

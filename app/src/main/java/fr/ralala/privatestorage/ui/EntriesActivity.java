@@ -1,10 +1,11 @@
 package fr.ralala.privatestorage.ui;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.TextInputEditText;
+import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -13,8 +14,6 @@ import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.util.TypedValue;
-import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -85,9 +84,9 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
       return;
     }
 
-    TextView tv = (TextView) findViewById(R.id.name);
+    TextView tv = findViewById(R.id.name);
     tv.setText(owner.getKey());
-    ListViewCompat list = (ListViewCompat)findViewById(R.id.content_form);
+    ListViewCompat list = findViewById(R.id.content_form);
     list.setOnItemLongClickListener(this);
     try {
       adapter = new SqlEntriesArrayAdapter(this,
@@ -96,58 +95,46 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
     } catch(Exception e) {
       Log.e(getClass().getSimpleName(), "SQL: " + e.getMessage(), e);
       UI.showAlertDialog(this, R.string.error, "SQL: " + e.getMessage());
-      return;
     }
 
 
-    FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-    fab.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View view) {
-        currentItem = null;
-        showInputDialog3(R.string.new_entry_title, R.string.new_entry_hint_key, R.string.new_entry_hint_value, REQ_ID_ADD);
-      }
+    FloatingActionButton fab = findViewById(R.id.fab);
+    fab.setOnClickListener((view) -> {
+      currentItem = null;
+      showInputDialog3(R.string.new_entry_title, R.string.new_entry_hint_key, R.string.new_entry_hint_value, REQ_ID_ADD);
     });
     ((PrivateStorageApp)getApplicationContext()).setFrom(this.getClass());
-
-    int px = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, getResources().getDisplayMetrics());
 
     android.support.v7.app.ActionBar actionBar = getDelegate().getSupportActionBar();
     // add the custom view to the action bar
     if(actionBar != null) {
       actionBar.setCustomView(R.layout.actionbar_view_entries);
-      final ImageView iview = ((ImageView) actionBar.getCustomView().findViewById(R.id.view));
+      final ImageView iview = actionBar.getCustomView().findViewById(R.id.view);
       iview.setImageResource(owner.getType() == SqlNameItem.Type.DISPLAY ? R.mipmap.ic_menu_view : R.mipmap.ic_menu_unview);
       adapter.setViewAll(owner.getType() == SqlNameItem.Type.DISPLAY);
-      iview.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View view) {
-          if(adapter.isViewAll()) {
-            iview.setImageResource(R.mipmap.ic_menu_unview);
-          } else {
-            iview.setImageResource(R.mipmap.ic_menu_view);
-          }
-          adapter.setViewAll(!adapter.isViewAll());
+      iview.setOnClickListener((view) -> {
+        if(adapter.isViewAll()) {
+          iview.setImageResource(R.mipmap.ic_menu_unview);
+        } else {
+          iview.setImageResource(R.mipmap.ic_menu_view);
         }
+        adapter.setViewAll(!adapter.isViewAll());
       });
-      ImageView iv = ((ImageView) actionBar.getCustomView().findViewById(R.id.icon));
-      iv.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View view) {
-          onBackPressed();
-        }
-      });
-      searchET = ((EditText) actionBar.getCustomView().findViewById(R.id.searchET));
+      ImageView iv = actionBar.getCustomView().findViewById(R.id.icon);
+      iv.setOnClickListener((v) -> onBackPressed());
+      searchET = actionBar.getCustomView().findViewById(R.id.searchET);
+      Runnable r = () -> {
+        // When user changed the Text
+        final String text = searchET.getText().toString()
+            .toLowerCase(Locale.getDefault());
+        adapter.filter(text);
+        if(text.isEmpty() && !adapter.isViewAll())
+          adapter.setViewAll(adapter.isViewAll()); /* force refresh */
+      };
       searchET.addTextChangedListener(new TextWatcher() {
-
         @Override
         public void onTextChanged(CharSequence cs, int arg1, int arg2, int arg3) {
-          // When user changed the Text
-          final String text = searchET.getText().toString()
-            .toLowerCase(Locale.getDefault());
-          adapter.filter(text);
-          if(text.isEmpty() && !adapter.isViewAll())
-            adapter.setViewAll(adapter.isViewAll()); /* force refresh */
+         r.run();
         }
 
         @Override
@@ -158,21 +145,18 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
         public void afterTextChanged(Editable arg0) {
         }
       });
-      searchET.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-        @Override
-        public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-          if (actionId == EditorInfo.IME_ACTION_DONE) {
-            InputMethodManager in = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+      searchET.setOnEditorActionListener((v, actionId, event) -> {
+        if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+          InputMethodManager in = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+          if(in != null)
             in.hideSoftInputFromWindow(v
                 .getApplicationWindowToken(),
               InputMethodManager.HIDE_NOT_ALWAYS);
-            return true;
-          }
-          return false;
+          r.run();
+          return true;
         }
+        return false;
       });
-
-
       actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM | ActionBar.DISPLAY_SHOW_HOME);
     }
 
@@ -200,28 +184,34 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
   public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
     SqlEntryItem item = (SqlEntryItem)adapter.getItem(position);
     if(item != null) {
+      Vibrator vibrator = ((Vibrator) getSystemService(VIBRATOR_SERVICE));
       switch (item.getType()) {
         case EMAIL:
-          ((Vibrator) getSystemService(VIBRATOR_SERVICE)).vibrate(50);
+          if(vibrator != null)
+            vibrator.vibrate(50);
           Sys.openMail(this, item.getValue());
           break;
         case PHONE:
-          ((Vibrator) getSystemService(VIBRATOR_SERVICE)).vibrate(50);
+          if(vibrator != null)
+            vibrator.vibrate(50);
           Sys.openDialer(this, item.getValue());
           break;
         case PASSWORD:
-          ((Vibrator) getSystemService(VIBRATOR_SERVICE)).vibrate(50);
-          TextView tv = (TextView)view.findViewById(R.id.value);
+          if(vibrator != null)
+            vibrator.vibrate(50);
+          TextView tv = view.findViewById(R.id.value);
           adapter.setValueVisible(tv.getText().toString().equals(item.getValue()) ? -1 : position);
           break;
         case COMPOSE:
         case TEXT:
-          ((Vibrator) getSystemService(VIBRATOR_SERVICE)).vibrate(50);
+          if(vibrator != null)
+            vibrator.vibrate(50);
           Sys.clipboard(this, item.getValue());
           UI.toast(this, R.string.text_copied);
           break;
         case URL:
-          ((Vibrator) getSystemService(VIBRATOR_SERVICE)).vibrate(50);
+          if(vibrator != null)
+            vibrator.vibrate(50);
           Sys.openBrowser(this, item.getValue());
           break;
       }
@@ -326,9 +316,11 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
     AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
     builder.setTitle(title);
-    final EditText input1 = new EditText(this);
-    final EditText input2 = new EditText(this);
+    final TextInputEditText input1 = new TextInputEditText(this);
+    final TextInputEditText input2 = new TextInputEditText(this);
     final Spinner spinner = new Spinner(this);
+    final TextInputLayout inputLayout2 = new TextInputLayout(this);
+    final TextInputLayout inputLayout1 = new TextInputLayout(this);
     input1.setInputType(InputType.TYPE_TEXT_FLAG_CAP_WORDS);
     if(hint1 != Integer.MAX_VALUE)
       input1.setHint(hint1);
@@ -356,23 +348,30 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
           switch (item.getIcon()) {
             case R.mipmap.ic_mail:
               input2.setInputType(InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS);
+              inputLayout2.setPasswordVisibilityToggleEnabled(false);
               break;
             case R.mipmap.ic_phone:
               input2.setInputType(InputType.TYPE_CLASS_PHONE);
+              inputLayout2.setPasswordVisibilityToggleEnabled(false);
               break;
             case R.mipmap.ic_url:
               input2.setInputType(InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS);
+              inputLayout2.setPasswordVisibilityToggleEnabled(false);
               if(input2.getText().toString().isEmpty())
                 input2.setText(R.string.text_start_https);
               break;
             case R.mipmap.ic_compose:
               input2.setInputType(InputType.TYPE_CLASS_NUMBER);
+              inputLayout2.setPasswordVisibilityToggleEnabled(false);
               break;
             case R.mipmap.ic_password:
               input2.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+              inputLayout2.setPasswordVisibilityToggleEnabled(true);
+              inputLayout2.setPasswordVisibilityToggleTintList(getColorStateList(R.color.textColor));
               break;
             default:
               input2.setInputType(InputType.TYPE_CLASS_TEXT);
+              inputLayout2.setPasswordVisibilityToggleEnabled(false);
               break;
           }
         }
@@ -391,6 +390,8 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
 
     LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
     lp.setMargins(20, 0, 0, 20);
+    LinearLayout.LayoutParams lp1 = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+    LinearLayout.LayoutParams lp2 = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
     parent.setLayoutParams(lp);
     parent.setOrientation(LinearLayout.VERTICAL);
 
@@ -400,8 +401,10 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
     lpTop.setMargins(20, 40, 0, 20);
     parent.addView(tv, lpTop);
     parent.addView(spinner, lp);
-    parent.addView(input1, lp);
-    parent.addView(input2, lp);
+    inputLayout1.addView(input1, 0, lp1);
+    parent.addView(inputLayout1, lp);
+    inputLayout2.addView(input2, 0, lp2);
+    parent.addView(inputLayout2, lp);
 
     builder.setView(parent);
 
@@ -409,20 +412,12 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
     builder.setPositiveButton(getString(R.string.ok), null);
     builder.setNegativeButton(getString(R.string.cancel), null);
     final AlertDialog mAlertDialog = builder.create();
-    mAlertDialog.setOnShowListener(new DialogInterface.OnShowListener() {
-
-      @Override
-      public void onShow(DialogInterface dialog) {
-
-        Button b = mAlertDialog.getButton(AlertDialog.BUTTON_POSITIVE);
-        b.setOnClickListener(new View.OnClickListener() {
-          @Override
-          public void onClick(View view) {
-            if(inputText3(reqId, spinner.getSelectedItemPosition(), input1.getText().toString(), input2.getText().toString()))
-              mAlertDialog.dismiss();
-          }
-        });
-      }
+    mAlertDialog.setOnShowListener((dialog) -> {
+      Button b = mAlertDialog.getButton(AlertDialog.BUTTON_POSITIVE);
+      b.setOnClickListener((view) -> {
+        if(inputText3(reqId, spinner.getSelectedItemPosition(), input1.getText().toString(), input2.getText().toString()))
+          mAlertDialog.dismiss();
+      });
     });
     mAlertDialog.setCanceledOnTouchOutside(false);
     mAlertDialog.show();
