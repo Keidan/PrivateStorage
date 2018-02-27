@@ -41,7 +41,7 @@ public class SpinnerIconArrayAdapter extends ArrayAdapter<SpinnerIconItem> {
   }
 
   @Override
-  public View getView(int position, View convertView, @NonNull ViewGroup parent) {
+  public @NonNull View getView(int position, View convertView, @NonNull ViewGroup parent) {
     return refreshView(position, convertView);
   }
 
@@ -59,8 +59,8 @@ public class SpinnerIconArrayAdapter extends ArrayAdapter<SpinnerIconItem> {
         final LayoutInflater vi = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         v = vi.inflate(R.layout.spinner_view, null);
         holder = new ViewHolder();
-        holder.text = (TextView) v.findViewById(R.id.text);
-        holder.icon = (ImageView) v.findViewById(R.id.icon);
+        holder.text = v.findViewById(R.id.text);
+        holder.icon = v.findViewById(R.id.icon);
         v.setTag(holder);
       } else {
           /* We recycle a View that already exists */
