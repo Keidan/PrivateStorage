@@ -2,27 +2,21 @@ package fr.ralala.privatestorage.ui.adapters;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.v7.view.menu.MenuBuilder;
+import android.support.v7.view.menu.MenuPopupHelper;
 import android.support.v7.widget.PopupMenu;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 
 import fr.ralala.privatestorage.R;
-import fr.ralala.privatestorage.items.SqlEntryItem;
 import fr.ralala.privatestorage.items.SqlItem;
 import fr.ralala.privatestorage.items.SqlNameItem;
-import fr.ralala.privatestorage.ui.utils.UI;
 
 /**
  *******************************************************************************
@@ -51,20 +45,21 @@ public class SqlNamesArrayAdapter extends SqlItemArrayAdapter {
   public @NonNull
   View getView(final int position, final View convertView,
                @NonNull final ViewGroup parent) {
-    View v = convertView;
+    View view = convertView;
     ViewHolder holder;
     final SqlItem t = kvlist.get(position);
-    if (v == null) {
+    if (view == null) {
       final LayoutInflater vi = (LayoutInflater) c.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-      v = vi.inflate(id, null);
+      assert vi != null;
+      view = vi.inflate(id, null);
       holder = new ViewHolder();
-      holder.key = (TextView) v.findViewById(R.id.key);
-      holder.type = (ImageView) v.findViewById(R.id.type);
-      holder.menu = (ImageView) v.findViewById(R.id.menu);
-      v.setTag(holder);
+      holder.key = view.findViewById(R.id.key);
+      holder.type = view.findViewById(R.id.type);
+      holder.menu = view.findViewById(R.id.menu);
+      view.setTag(holder);
     } else {
         /* We recycle a View that already exists */
-      holder = (ViewHolder) v.getTag();
+      holder = (ViewHolder) view.getTag();
     }
     holder.key.setText(t.getKey());
     if(SqlNameItem.class.isInstance(t)) {
@@ -80,37 +75,30 @@ public class SqlNamesArrayAdapter extends SqlItemArrayAdapter {
     }
     /* Show the popup menu if the user click on the 3-dots item. */
     try {
-      holder.menu.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-          switch (v.getId()) {
-            case R.id.menu:
-              final PopupMenu popup = new PopupMenu(c, v);
-                /* Force the icons display */
-              UI.forcePopupMenuIcons(popup);
-              popup.getMenuInflater().inflate(popupView, popup.getMenu());
-                /* Init the default behaviour */
-              popup.show();
-              popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                @Override
-                public boolean onMenuItemClick(MenuItem item) {
-                  if (listener != null && R.id.edit == item.getItemId())
-                    listener.onMenuEdit(t);
-                  else if (listener != null && R.id.delete == item.getItemId())
-                    listener.onMenuDelete(t);
-                  return true;
-                }
-              });
-              break;
-            default:
-              break;
-          }
+      holder.menu.setOnClickListener((vv) -> {
+        switch (vv.getId()) {
+          case R.id.menu:
+            final PopupMenu popup = new PopupMenu(c, vv);
+            MenuPopupHelper menuHelper = new MenuPopupHelper(c, (MenuBuilder) popup.getMenu(), vv);
+            menuHelper.setForceShowIcon(true);
+            popup.getMenuInflater().inflate(popupView, popup.getMenu());
+            menuHelper.show();
+            popup.setOnMenuItemClickListener((item) -> {
+              if (listener != null && R.id.edit == item.getItemId())
+                listener.onMenuEdit(t);
+              else if (listener != null && R.id.delete == item.getItemId())
+                listener.onMenuDelete(t);
+              return true;
+            });
+            break;
+          default:
+            break;
         }
       });
     } catch (Exception e) {
       Log.e(getClass().getSimpleName(), "Exception: " + e.getMessage(), e);
     }
-    return v;
+    return view;
   }
 }
 

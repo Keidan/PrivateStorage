@@ -2,13 +2,11 @@ package fr.ralala.privatestorage.ui.utils;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.widget.PopupMenu;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,8 +16,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,26 +62,6 @@ public class UI {
     progress.setCancelable(false);
     progress.setView(view);
     return progress;
-  }
-
-  public static void forcePopupMenuIcons(final PopupMenu popup) {
-    try {
-      Field[] fields = popup.getClass().getDeclaredFields();
-      for (Field field : fields) {
-        if ("mPopup".equals(field.getName())) {
-          field.setAccessible(true);
-          Object menuPopupHelper = field.get(popup);
-          Class<?> classPopupHelper = Class.forName(menuPopupHelper
-            .getClass().getName());
-          Method setForceIcons = classPopupHelper.getMethod(
-            "setForceShowIcon", boolean.class);
-          setForceIcons.invoke(menuPopupHelper, true);
-          break;
-        }
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
   }
 
   /* tool function used to display a message box */

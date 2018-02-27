@@ -6,7 +6,6 @@ import android.content.Context;
 import android.widget.BaseAdapter;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -22,7 +21,7 @@ import java.util.Locale;
  */
 public abstract class SqlItemArrayAdapter extends BaseAdapter {
 
-  protected Context c = null;
+  Context c = null;
   protected int id = 0;
   List<SqlItem> kvlist = null;
   private final List<SqlItem> arraylist;
@@ -35,7 +34,7 @@ public abstract class SqlItemArrayAdapter extends BaseAdapter {
     void onMenuDelete(SqlItem t);
   }
 
-  public SqlItemArrayAdapter(final Context context, final int textViewResourceId,
+  SqlItemArrayAdapter(final Context context, final int textViewResourceId,
                              final List<SqlItem> objects, SqlItemArrayAdapterMenuListener listener, int popupView) {
     this.c = context;
     this.id = textViewResourceId;
@@ -56,12 +55,7 @@ public abstract class SqlItemArrayAdapter extends BaseAdapter {
   public void add(SqlItem sti) {
     kvlist.add(sti);
     arraylist.add(sti);
-    Collections.sort(kvlist, new Comparator<SqlItem>() {
-      @Override
-      public int compare(final SqlItem lhs, final SqlItem rhs) {
-        return lhs.getKey().compareTo(rhs.getKey());
-      }
-    });
+    kvlist.sort(Comparator.comparing(SqlItem::getKey));
     notifyDataSetChanged();
   }
 
