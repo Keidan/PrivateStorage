@@ -9,6 +9,8 @@ import com.dropbox.core.android.Auth;
 import com.dropbox.core.http.OkHttp3Requestor;
 import com.dropbox.core.v2.DbxClientV2;
 
+import fr.ralala.privatestorage.R;
+
 /**
  *******************************************************************************
  * <p><b>Project PrivateStorage</b><br/>
@@ -65,6 +67,19 @@ public class DropboxHelper {
     return accessToken != null;
   }
 
+  private String getAccessToken(final Context ctx, SharedPreferences prefs, String accessToken) {
+    String oAuth2Token = Auth.getOAuth2Token();
+    if(oAuth2Token == null) {
+      oAuth2Token = ctx.getString(R.string.accesstoken);
+    }
+    if (accessToken.compareTo(oAuth2Token) != 0) {
+      Log.e(getClass().getSimpleName(), "Update accessToken (old: '" + accessToken + "', new: '" + oAuth2Token + "'");
+      prefs.edit().putString(KEY, oAuth2Token).apply();
+    }
+    return oAuth2Token;
+  }
+
+
   /**
    * Loads the dropbox token.
    * @param ctx The Android context.
@@ -74,21 +89,12 @@ public class DropboxHelper {
     SharedPreferences prefs = c.getSharedPreferences(LABEL, Context.MODE_PRIVATE);
     String accessToken = prefs.getString(KEY, null);
     if (accessToken == null) {
-      accessToken = Auth.getOAuth2Token();
-      Log.e(getClass().getSimpleName(), "0 - accessToken:"+accessToken + ", auth: " + Auth.getOAuth2Token());
+      accessToken = getAccessToken(ctx, prefs, accessToken);
       if (accessToken != null) {
-        prefs.edit().putString(KEY, accessToken).apply();
         initDropBox(accessToken);
       }
     } else {
-      String auth = Auth.getOAuth2Token();
-      if(auth != null && accessToken.compareTo(auth) != 0) {
-        Log.e(getClass().getSimpleName(), "Update accessToken (old: '" + accessToken + "', new: '" + auth + "'");
-        accessToken = auth;
-        prefs.edit().putString(KEY, accessToken).apply();
-      }
-      Log.e(getClass().getSimpleName(), "1 - accessToken:"+accessToken + ", auth: " + Auth.getOAuth2Token());
-      initDropBox(accessToken);
+      initDropBox(getAccessToken(ctx, prefs, accessToken));
     }
   }
 
