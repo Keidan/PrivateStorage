@@ -26,16 +26,16 @@ import fr.ralala.privatestorage.items.SpinnerIconItem;
  *******************************************************************************
  */
 public class SpinnerIconArrayAdapter extends ArrayAdapter<SpinnerIconItem> {
-  private List<SpinnerIconItem> items;
+  private final List<SpinnerIconItem> mItems;
 
   public SpinnerIconArrayAdapter(Context context, List<SpinnerIconItem> data) {
     super(context, android.R.layout.simple_spinner_item);
     addAll(data);
-    this.items = data;
+    mItems = data;
   }
 
 
-  private class ViewHolder {
+  private static class ViewHolder {
     TextView text = null;
     ImageView icon = null;
   }
@@ -54,10 +54,11 @@ public class SpinnerIconArrayAdapter extends ArrayAdapter<SpinnerIconItem> {
     try {
       View v = convertView;
       ViewHolder holder;
-      final SpinnerIconItem sii = items.get(position);
+      final SpinnerIconItem sii = mItems.get(position);
       if (v == null) {
         final LayoutInflater vi = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        v = vi.inflate(R.layout.spinner_view, null);
+        final ViewGroup root = null;
+        v = vi.inflate(R.layout.spinner_view, root);
         holder = new ViewHolder();
         holder.text = v.findViewById(R.id.text);
         holder.icon = v.findViewById(R.id.icon);

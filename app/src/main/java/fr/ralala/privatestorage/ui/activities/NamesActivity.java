@@ -1,4 +1,4 @@
-package fr.ralala.privatestorage.ui;
+package fr.ralala.privatestorage.ui.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -8,7 +8,7 @@ import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.widget.ListViewCompat;
+import android.widget.ListView;
 import android.text.InputType;
 import android.util.Log;
 import android.view.View;
@@ -30,9 +30,9 @@ import fr.ralala.privatestorage.items.SqlItem;
 import fr.ralala.privatestorage.items.SqlNameItem;
 import fr.ralala.privatestorage.ui.adapters.SpinnerIconArrayAdapter;
 import fr.ralala.privatestorage.ui.adapters.SqlNamesArrayAdapter;
-import fr.ralala.privatestorage.ui.common.DoubleBackActivity;
+import fr.ralala.privatestorage.ui.activities.common.DoubleBackActivity;
 import fr.ralala.privatestorage.ui.adapters.SqlItemArrayAdapter;
-import fr.ralala.privatestorage.ui.login.LoginActivity;
+import fr.ralala.privatestorage.ui.activities.login.LoginActivity;
 import fr.ralala.privatestorage.utils.Sys;
 import fr.ralala.privatestorage.ui.utils.UI;
 
@@ -50,12 +50,14 @@ public class NamesActivity extends DoubleBackActivity implements AdapterView.OnI
   private static final int REQ_ID_ADD = 0;
   private static final int REQ_ID_EDIT = 1;
 
-  private SqlItemArrayAdapter adapter = null;
-  private SqlNameItem currentItem = null;
+  private SqlItemArrayAdapter mAdapter = null;
+  private SqlNameItem mCurrentItem = null;
+  private PrivateStorageApp mApp;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    mApp = (PrivateStorageApp)getApplicationContext();
     /* Disable back button */
     try {
       ActionBar ab = getSupportActionBar();
@@ -72,11 +74,11 @@ public class NamesActivity extends DoubleBackActivity implements AdapterView.OnI
       return;
     }
     setContentView(R.layout.activity_names);
-    ListViewCompat list = findViewById(R.id.content_names);
+    ListView list = findViewById(R.id.content_names);
     try {
-      adapter = new SqlNamesArrayAdapter(this,
+      mAdapter = new SqlNamesArrayAdapter(this,
         R.layout.menu_list_item_2, getSql().getNames(), this, R.menu.popup_listview_names);
-      list.setAdapter(adapter);
+      list.setAdapter(mAdapter);
       list.setOnItemClickListener(this);
     } catch(Exception e) {
       Log.e(getClass().getSimpleName(), "SQL: " + e.getMessage(), e);
@@ -85,7 +87,7 @@ public class NamesActivity extends DoubleBackActivity implements AdapterView.OnI
 
     FloatingActionButton fab = findViewById(R.id.fab);
     fab.setOnClickListener((view) -> {
-      currentItem = null;
+      mCurrentItem = null;
       showInputDialog2(R.string.new_data_title, SqlNameItem.Type.DISPLAY, null, REQ_ID_ADD);
     });
     ((PrivateStorageApp)getApplicationContext()).setFrom(this.getClass());
@@ -115,19 +117,19 @@ public class NamesActivity extends DoubleBackActivity implements AdapterView.OnI
       SqlNameItem sti = new SqlNameItem(SqlNameItem.Type.fromInt(type), text, "");
       try {
         if(reqId == REQ_ID_EDIT) {
-          adapter.remove(currentItem);
-          currentItem.setKey(text);
-          currentItem.setType(sti.getType());
-          getSql().updateName(currentItem);
-          sti = currentItem;
+          mAdapter.remove(mCurrentItem);
+          mCurrentItem.setKey(text);
+          mCurrentItem.setType(sti.getType());
+          getSql().updateName(mCurrentItem);
+          sti = mCurrentItem;
         } else {
-          if(adapter.contains(sti)) {
+          if(mAdapter.contains(sti)) {
             UI.toast(this, R.string.already_inserted);
             return false;
           }
           getSql().addName(sti);
         }
-        adapter.add(sti);
+        mAdapter.add(sti);
         if(reqId == REQ_ID_ADD) {
           getApp().setCurrentName(sti.getKey());
           Sys.switchTo(this, EntriesActivity.class, false);
@@ -167,6 +169,13 @@ public class NamesActivity extends DoubleBackActivity implements AdapterView.OnI
     if (id == R.id.action_settings) {
       Sys.switchTo(this, SettingsActivity.class, false);
       return true;
+    }if (id == R.id.action_export) {
+      if(mApp.getLastExportType().equals(PrivateStorageApp.PREFS_VAL_LAST_EXPORT_DEVICE)) {
+        Sys.exportDevice(this);
+      } else if(mApp.getLastExportType().equals(PrivateStorageApp.PREFS_VAL_LAST_EXPORT_DROPBOX)) {
+        Sys.exportDropbox(mApp, this);
+      }
+      return true;
     } else if (id == android.R.id.home) {
       onBackPressed();
       return true;
@@ -177,20 +186,20 @@ public class NamesActivity extends DoubleBackActivity implements AdapterView.OnI
 
 
   public void onMenuEdit(SqlItem t) {
-    currentItem = (SqlNameItem)t;
+    mCurrentItem = (SqlNameItem)t;
     showInputDialog2(R.string.update_data_title, ((SqlNameItem) t).getType(), t.getKey(), REQ_ID_EDIT);
   }
 
   public void onMenuDelete(final SqlItem t) {
     UI.showConfirmDialog(this, R.string.confirm_delete_name_title, R.string.confirm_delete_name_message, (view) -> {
-      adapter.remove(t);
+      mAdapter.remove(t);
       getSql().deleteName((SqlNameItem)t);
     }, null);
   }
 
   @Override
   public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-    SqlNameItem sti = (SqlNameItem)adapter.getItem(i);
+    SqlNameItem sti = (SqlNameItem)mAdapter.getItem(i);
     if(sti != null) {
       getApp().setCurrentName(sti.getKey());
       Sys.switchTo(this, EntriesActivity.class, false);

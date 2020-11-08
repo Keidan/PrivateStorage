@@ -1,8 +1,8 @@
-package fr.ralala.privatestorage.ui.login;
+package fr.ralala.privatestorage.ui.activities.login;
 
 import fr.ralala.privatestorage.R;
 import fr.ralala.privatestorage.PrivateStorageApp;
-import fr.ralala.privatestorage.ui.common.RuntimePermissionsActivity;
+import fr.ralala.privatestorage.ui.activities.common.RuntimePermissionsActivity;
 import fr.ralala.privatestorage.utils.Sys;
 import fr.ralala.privatestorage.ui.utils.UI;
 
@@ -21,8 +21,8 @@ import android.widget.EditText;
  *******************************************************************************
  */
 public class InitActivity extends RuntimePermissionsActivity {
-  private EditText   tokenET        = null;
-  private EditText   tokenConfirmET = null;
+  private EditText mTokenET = null;
+  private EditText mTokenConfirmET = null;
   private static final int PERMISSIONS_REQUEST = 30;
 
   @Override
@@ -30,12 +30,13 @@ public class InitActivity extends RuntimePermissionsActivity {
     super.onCreate(savedInstanceState);
     // Set View to init.xml
     setContentView(R.layout.content_init);
-    tokenET = findViewById(R.id.tokenET);
-    tokenConfirmET = findViewById(R.id.tokenConfirmET);
+    mTokenET = findViewById(R.id.tokenET);
+    mTokenConfirmET = findViewById(R.id.tokenConfirmET);
 
     String[] perms = new String[]{
-      Manifest.permission.READ_EXTERNAL_STORAGE,
       Manifest.permission.WRITE_EXTERNAL_STORAGE,
+      Manifest.permission.READ_EXTERNAL_STORAGE,
+      Manifest.permission.INTERNET,
     };
     super.requestAppPermissions(perms, R.string.permissions , PERMISSIONS_REQUEST);
     ((PrivateStorageApp)getApplicationContext()).setFrom(null);
@@ -48,13 +49,13 @@ public class InitActivity extends RuntimePermissionsActivity {
   @Override
   public void onResume() {
     super.onResume();
-    tokenET.setText("");
-    tokenConfirmET.setText("");
+    mTokenET.setText("");
+    mTokenConfirmET.setText("");
   }
 
   public void actionCreate(final View v) {
-    final String token = tokenET.getText().toString().trim();
-    final String tokenConfirm = tokenConfirmET.getText().toString()
+    final String token = mTokenET.getText().toString().trim();
+    final String tokenConfirm = mTokenConfirmET.getText().toString()
         .trim();
     if (token.isEmpty()) {
       UI.showAlertDialog(this, R.string.error, R.string.error_invalid_token_value);

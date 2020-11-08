@@ -1,4 +1,4 @@
-package fr.ralala.privatestorage.ui.common;
+package fr.ralala.privatestorage.ui.activities.common;
 
 import android.content.Intent;
 import android.content.pm.PackageManager;

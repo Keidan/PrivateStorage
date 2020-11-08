@@ -10,35 +10,35 @@ package fr.ralala.privatestorage.items;
  *******************************************************************************
  */
 public class SqlItem {
-  private long id = 0;
-  private String key = null;
-  private String value = null;
+  private long mId = 0;
+  private String mKey = null;
+  private String mValue = null;
 
   public long getId() {
-    return id;
+    return mId;
   }
 
-  public long setId(long id) {
-    return this.id = id;
+  public void setId(long id) {
+    mId = id;
   }
 
   public String getKey() {
-    return key;
+    return mKey;
   }
 
   public void setKey(String key) {
-    this.key = key;
+    mKey = key;
   }
 
   public String getValue() {
-    return value == null ? "" : value;
+    return mValue == null ? "" : mValue;
   }
 
   public void setValue(String value) {
-    this.value = value;
+    mValue = value;
   }
 
   public String toString() {
-    return key + "=" + value;
+    return mKey + "=" + mValue;
   }
 }

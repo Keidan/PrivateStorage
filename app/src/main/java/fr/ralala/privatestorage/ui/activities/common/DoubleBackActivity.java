@@ -1,4 +1,4 @@
-package fr.ralala.privatestorage.ui.common;
+package fr.ralala.privatestorage.ui.activities.common;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -19,39 +19,39 @@ import fr.ralala.privatestorage.ui.utils.UI;
  */
 public abstract class DoubleBackActivity extends AppCompatActivity {
   private static final int BACK_TIME_DELAY = 2000;
-  private static long lastBackPressed = -1;
-  private SqlFactory sql = null;
-  private PrivateStorageApp app = null;
+  private static long mLastBackPressed = -1;
+  private SqlFactory mSql = null;
+  private PrivateStorageApp mApp = null;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
-    app = (PrivateStorageApp)getApplication();
+    mApp = (PrivateStorageApp)getApplication();
     Throwable t;
-    if((t = app.install()) != null)
+    if((t = mApp.install()) != null)
       UI.showAlertDialog(this, R.string.exception, t.getMessage());
-    sql = app.getSql();
+    mSql = mApp.getSql();
   }
 
   public abstract void onExit();
 
   protected SqlFactory getSql() {
-    return sql;
+    return mSql;
   }
 
   protected PrivateStorageApp getApp() {
-    return app;
+    return mApp;
   }
 
   @Override
   public void onBackPressed() {
-    if (lastBackPressed + BACK_TIME_DELAY > System.currentTimeMillis()) {
+    if (mLastBackPressed + BACK_TIME_DELAY > System.currentTimeMillis()) {
       onExit();
       super.onBackPressed();
     } else {
       UI.toast(this, R.string.on_double_back_exit_text);
     }
-    lastBackPressed = System.currentTimeMillis();
+    mLastBackPressed = System.currentTimeMillis();
   }
 }

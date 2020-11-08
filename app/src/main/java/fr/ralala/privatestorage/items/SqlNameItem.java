@@ -10,7 +10,7 @@ package fr.ralala.privatestorage.items;
  *******************************************************************************
  */
 public class SqlNameItem extends SqlItem {
-  private Type type = Type.DISPLAY;
+  private Type mType = Type.DISPLAY;
 
   public enum Type {
     DISPLAY,
@@ -45,21 +45,21 @@ public class SqlNameItem extends SqlItem {
     setId(id);
     setKey(key);
     setValue(value);
-    this.type = type;
+    setType(type);
   }
 
   public void set(SqlNameItem sti) {
     setId(sti.getId());
     setKey(sti.getKey());
     setValue(sti.getValue());
-    setType(sti.type);
+    setType(sti.mType);
   }
 
   public Type getType() {
-    return type;
+    return mType;
   }
 
   public void setType(Type type) {
-    this.type = type;
+    mType = type;
   }
 }

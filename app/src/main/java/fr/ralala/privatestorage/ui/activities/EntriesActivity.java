@@ -1,4 +1,4 @@
-package fr.ralala.privatestorage.ui;
+package fr.ralala.privatestorage.ui.activities;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -9,7 +9,7 @@ import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.ListViewCompat;
+import android.widget.ListView;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
@@ -41,7 +41,7 @@ import fr.ralala.privatestorage.ui.adapters.SpinnerIconArrayAdapter;
 import fr.ralala.privatestorage.ui.adapters.SqlEntriesArrayAdapter;
 import fr.ralala.privatestorage.ui.adapters.SqlItemArrayAdapter;
 import fr.ralala.privatestorage.items.SqlEntryItem;
-import fr.ralala.privatestorage.ui.login.LoginActivity;
+import fr.ralala.privatestorage.ui.activities.login.LoginActivity;
 import fr.ralala.privatestorage.utils.Sys;
 import fr.ralala.privatestorage.ui.utils.UI;
 
@@ -59,11 +59,11 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
   private static final int REQ_ID_ADD = 0;
   private static final int REQ_ID_EDIT = 1;
 
-  private SqlFactory sql = null;
-  private SqlEntriesArrayAdapter adapter = null;
-  private SqlEntryItem currentItem = null;
-  private SqlNameItem owner = null;
-  private EditText searchET = null;
+  private SqlFactory mSql = null;
+  private SqlEntriesArrayAdapter mAdapter = null;
+  private SqlEntryItem mCurrentItem = null;
+  private SqlNameItem mOwner = null;
+  private EditText mSearchET = null;
 
 
   @Override
@@ -74,10 +74,10 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
     Throwable t;
     if((t = app.install()) != null)
       UI.showAlertDialog(this, R.string.exception, t.getMessage());
-    sql = app.getSql();
+    mSql = app.getSql();
 
     try {
-      owner = sql.getName(app.getCurrentName());
+      mOwner = mSql.getName(app.getCurrentName());
     } catch(Exception e) {
       Log.e(getClass().getSimpleName(), "SQL: " + e.getMessage(), e);
       UI.showAlertDialog(this, R.string.error, "SQL: " + e.getMessage());
@@ -85,13 +85,13 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
     }
 
     TextView tv = findViewById(R.id.name);
-    tv.setText(owner.getKey());
-    ListViewCompat list = findViewById(R.id.content_form);
+    tv.setText(mOwner.getKey());
+    ListView list = findViewById(R.id.content_form);
     list.setOnItemLongClickListener(this);
     try {
-      adapter = new SqlEntriesArrayAdapter(this,
-        R.layout.menu_list_item_3, sql.getEntries(owner), this, R.menu.popup_listview_form);
-      list.setAdapter(adapter);
+      mAdapter = new SqlEntriesArrayAdapter(this,
+        R.layout.menu_list_item_3, mSql.getEntries(mOwner), this, R.menu.popup_listview_form);
+      list.setAdapter(mAdapter);
     } catch(Exception e) {
       Log.e(getClass().getSimpleName(), "SQL: " + e.getMessage(), e);
       UI.showAlertDialog(this, R.string.error, "SQL: " + e.getMessage());
@@ -100,7 +100,7 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
 
     FloatingActionButton fab = findViewById(R.id.fab);
     fab.setOnClickListener((view) -> {
-      currentItem = null;
+      mCurrentItem = null;
       showInputDialog3(R.string.new_entry_title, R.string.new_entry_hint_key, R.string.new_entry_hint_value, REQ_ID_ADD);
     });
     ((PrivateStorageApp)getApplicationContext()).setFrom(this.getClass());
@@ -110,28 +110,28 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
     if(actionBar != null) {
       actionBar.setCustomView(R.layout.actionbar_view_entries);
       final ImageView iview = actionBar.getCustomView().findViewById(R.id.view);
-      iview.setImageResource(owner.getType() == SqlNameItem.Type.DISPLAY ? R.mipmap.ic_menu_view : R.mipmap.ic_menu_unview);
-      adapter.setViewAll(owner.getType() == SqlNameItem.Type.DISPLAY);
+      iview.setImageResource(mOwner.getType() == SqlNameItem.Type.DISPLAY ? R.mipmap.ic_menu_view : R.mipmap.ic_menu_unview);
+      mAdapter.setViewAll(mOwner.getType() == SqlNameItem.Type.DISPLAY);
       iview.setOnClickListener((view) -> {
-        if(adapter.isViewAll()) {
+        if(mAdapter.isViewAll()) {
           iview.setImageResource(R.mipmap.ic_menu_unview);
         } else {
           iview.setImageResource(R.mipmap.ic_menu_view);
         }
-        adapter.setViewAll(!adapter.isViewAll());
+        mAdapter.setViewAll(!mAdapter.isViewAll());
       });
       ImageView iv = actionBar.getCustomView().findViewById(R.id.icon);
       iv.setOnClickListener((v) -> onBackPressed());
-      searchET = actionBar.getCustomView().findViewById(R.id.searchET);
+      mSearchET = actionBar.getCustomView().findViewById(R.id.searchET);
       Runnable r = () -> {
         // When user changed the Text
-        final String text = searchET.getText().toString()
+        final String text = mSearchET.getText().toString()
             .toLowerCase(Locale.getDefault());
-        adapter.filter(text);
-        if(text.isEmpty() && !adapter.isViewAll())
-          adapter.setViewAll(adapter.isViewAll()); /* force refresh */
+        mAdapter.filter(text);
+        if(text.isEmpty() && !mAdapter.isViewAll())
+          mAdapter.setViewAll(mAdapter.isViewAll()); /* force refresh */
       };
-      searchET.addTextChangedListener(new TextWatcher() {
+      mSearchET.addTextChangedListener(new TextWatcher() {
         @Override
         public void onTextChanged(CharSequence cs, int arg1, int arg2, int arg3) {
          r.run();
@@ -145,7 +145,7 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
         public void afterTextChanged(Editable arg0) {
         }
       });
-      searchET.setOnEditorActionListener((v, actionId, event) -> {
+      mSearchET.setOnEditorActionListener((v, actionId, event) -> {
         if (actionId == EditorInfo.IME_ACTION_SEARCH) {
           InputMethodManager in = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
           if(in != null)
@@ -164,7 +164,7 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
 
   @Override
   public void onResume() {
-    searchET.setText("");
+    mSearchET.setText("");
     super.onResume();
   }
 
@@ -182,7 +182,7 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
 
   @Override
   public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-    SqlEntryItem item = (SqlEntryItem)adapter.getItem(position);
+    SqlEntryItem item = (SqlEntryItem)mAdapter.getItem(position);
     if(item != null) {
       Vibrator vibrator = ((Vibrator) getSystemService(VIBRATOR_SERVICE));
       switch (item.getType()) {
@@ -200,7 +200,7 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
           if(vibrator != null)
             vibrator.vibrate(50);
           TextView tv = view.findViewById(R.id.value);
-          adapter.setValueVisible(tv.getText().toString().equals(item.getValue()) ? -1 : position);
+          mAdapter.setValueVisible(tv.getText().toString().equals(item.getValue()) ? -1 : position);
           break;
         case COMPOSE:
         case TEXT:
@@ -221,7 +221,7 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
 
   public boolean inputText3(int reqId, int type, String text1, String text2) {
     if(!text1.isEmpty() && !text2.isEmpty()) {
-      SqlEntryItem sti = new SqlEntryItem(currentItem == null ? 0 : currentItem.getId(), SqlEntryItem.Type.fromInt(type + 1), text1, text2);
+      SqlEntryItem sti = new SqlEntryItem(mCurrentItem == null ? 0 : mCurrentItem.getId(), SqlEntryItem.Type.fromInt(type + 1), text1, text2);
 
       switch (sti.getType()) {
         case EMAIL:
@@ -239,18 +239,18 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
       }
       try {
         if(reqId == REQ_ID_EDIT) {
-          adapter.remove(currentItem);
-          currentItem.set(sti);
-          sql.updateEntry(currentItem);
-          sti = currentItem;
+          mAdapter.remove(mCurrentItem);
+          mCurrentItem.set(sti);
+          mSql.updateEntry(mCurrentItem);
+          sti = mCurrentItem;
         } else {
-          if(adapter.contains(sti)) {
+          if(mAdapter.contains(sti)) {
             UI.toast(this, R.string.already_inserted);
             return false;
           }
-          sql.addEntry(owner, sti);
+          mSql.addEntry(mOwner, sti);
         }
-        adapter.add(sti);
+        mAdapter.add(sti);
       } catch(Exception e) {
         Log.e(getClass().getSimpleName(), "SQL: " + e.getMessage(), e);
         UI.showAlertDialog(this, R.string.error, "SQL: " + e.getMessage());
@@ -287,8 +287,8 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
 
 
   public void onMenuEdit(SqlItem t) {
-    currentItem = (SqlEntryItem)t;
-    showInputDialog3(R.string.new_entry_title, R.string.new_entry_hint_key, R.string.new_entry_hint_value, currentItem.getType(), t.getKey(), t.getValue(), REQ_ID_EDIT);
+    mCurrentItem = (SqlEntryItem)t;
+    showInputDialog3(R.string.new_entry_title, R.string.new_entry_hint_key, R.string.new_entry_hint_value, mCurrentItem.getType(), t.getKey(), t.getValue(), REQ_ID_EDIT);
   }
 
   public void onMenuDelete(final SqlItem t) {
@@ -297,8 +297,8 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
         @Override
         public void onClick(View view) {
           try {
-            adapter.remove(t);
-            sql.deleteEntry(owner, (SqlEntryItem)t);
+            mAdapter.remove(t);
+            mSql.deleteEntry(mOwner, (SqlEntryItem)t);
           } catch(Exception e) {
             Log.e(getClass().getSimpleName(), "SQL: " + e.getMessage(), e);
             UI.showAlertDialog(EntriesActivity.this, R.string.error, "SQL: " + e.getMessage());
@@ -345,34 +345,33 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
       public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
         SpinnerIconItem item = ladapter.getItem(i);
         if(item != null) {
-          switch (item.getIcon()) {
-            case R.mipmap.ic_mail:
-              input2.setInputType(InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS);
-              inputLayout2.setPasswordVisibilityToggleEnabled(false);
-              break;
-            case R.mipmap.ic_phone:
-              input2.setInputType(InputType.TYPE_CLASS_PHONE);
-              inputLayout2.setPasswordVisibilityToggleEnabled(false);
-              break;
-            case R.mipmap.ic_url:
-              input2.setInputType(InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS);
-              inputLayout2.setPasswordVisibilityToggleEnabled(false);
-              if(input2.getText().toString().isEmpty())
-                input2.setText(R.string.text_start_https);
-              break;
-            case R.mipmap.ic_compose:
-              input2.setInputType(InputType.TYPE_CLASS_NUMBER);
-              inputLayout2.setPasswordVisibilityToggleEnabled(false);
-              break;
-            case R.mipmap.ic_password:
-              input2.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-              inputLayout2.setPasswordVisibilityToggleEnabled(true);
-              inputLayout2.setPasswordVisibilityToggleTintList(getColorStateList(R.color.textColor));
-              break;
-            default:
-              input2.setInputType(InputType.TYPE_CLASS_TEXT);
-              inputLayout2.setPasswordVisibilityToggleEnabled(false);
-              break;
+          int icon = item.getIcon();
+          if(icon == R.mipmap.ic_mail) {
+            input2.setInputType(InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS);
+            inputLayout2.setPasswordVisibilityToggleEnabled(false);
+          }
+          if(icon == R.mipmap.ic_phone) {
+            input2.setInputType(InputType.TYPE_CLASS_PHONE);
+            inputLayout2.setPasswordVisibilityToggleEnabled(false);
+          }
+          if(icon == R.mipmap.ic_url) {
+            input2.setInputType(InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS);
+            inputLayout2.setPasswordVisibilityToggleEnabled(false);
+            if (input2.getText().toString().isEmpty())
+              input2.setText(R.string.text_start_https);
+          }
+          if(icon == R.mipmap.ic_compose) {
+            input2.setInputType(InputType.TYPE_CLASS_NUMBER);
+            inputLayout2.setPasswordVisibilityToggleEnabled(false);
+          }
+          if(icon == R.mipmap.ic_password) {
+            input2.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+            inputLayout2.setPasswordVisibilityToggleEnabled(true);
+            inputLayout2.setPasswordVisibilityToggleTintList(getColorStateList(R.color.textColor));
+          }
+          else {
+            input2.setInputType(InputType.TYPE_CLASS_TEXT);
+            inputLayout2.setPasswordVisibilityToggleEnabled(false);
           }
         }
       }

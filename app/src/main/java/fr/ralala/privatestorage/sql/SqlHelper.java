@@ -60,12 +60,12 @@ public class SqlHelper extends SQLiteOpenHelper implements SqlConstants {
 
   // Copy to sdcard for debug use
   public static String copyDatabase(final Context c, final String name,
-                                    final String folder) throws Exception {
-    return copyDatabase(c, name, folder, name, true);
+                                  final String folder) throws Exception {
+    return copyDatabase(c, name, folder, name);
   }
-  private static String copyDatabase(final Context c, final String name,
-                                    final String folder,
-                                    final String filename, boolean date) throws Exception{
+  public static String copyDatabase(final Context c, final String name,
+                                   final String folder,
+                                   final String filename) throws Exception{
     final String databasePath = c.getDatabasePath(name).getPath();
     final File f = new File(databasePath);
     OutputStream myOutput = null;
@@ -80,7 +80,7 @@ public class SqlHelper extends SQLiteOpenHelper implements SqlConstants {
         if (!directory.exists())
           if(!directory.mkdir())
             Log.e(SqlHelper.class.getSimpleName(), "mkdir failed!");
-        File out = new File(directory, !date ? filename : (new SimpleDateFormat("yyyyMMdd_hhmma", Locale.US).format(new Date()) + "_" + name));
+        File out = new File(directory, new SimpleDateFormat("yyyyMMdd_hhmma", Locale.US).format(new Date()) + "_" + filename);
         myOutput = new FileOutputStream(out);
         myInput = new FileInputStream(databasePath);
 

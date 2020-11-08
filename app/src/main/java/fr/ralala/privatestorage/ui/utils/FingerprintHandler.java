@@ -31,12 +31,12 @@ import javax.crypto.SecretKey;
 
 @TargetApi(Build.VERSION_CODES.M)
 public class FingerprintHandler extends FingerprintManager.AuthenticationCallback {
-  private Context context;
-  private FingerprintHandlerListener listener;
-  private Cipher cipher;
-  private KeyStore keyStore;
-  private FingerprintManager fingerprintManager;
-  private KeyguardManager keyguardManager;
+  private final Context mContext;
+  private final FingerprintHandlerListener mListener;
+  private Cipher mCipher;
+  private KeyStore mKeyStore;
+  private FingerprintManager mFingerprintManager;
+  private KeyguardManager mKeyguardManager;
 
   public interface FingerprintHandlerListener {
     void onAuthenticationError(String err);
@@ -46,13 +46,13 @@ public class FingerprintHandler extends FingerprintManager.AuthenticationCallbac
   }
 
   public FingerprintHandler(Context context, FingerprintHandlerListener listener) {
-    this.context = context;
-    this.listener = listener;
+    mContext = context;
+    mListener = listener;
   }
 
   private void startAuth(FingerprintManager manager, FingerprintManager.CryptoObject cryptoObject) {
     CancellationSignal cancellationSignal = new CancellationSignal();
-    if (ActivityCompat.checkSelfPermission(context, Manifest.permission.USE_FINGERPRINT) != PackageManager.PERMISSION_GRANTED) {
+    if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.USE_FINGERPRINT) != PackageManager.PERMISSION_GRANTED) {
       return;
     }
     manager.authenticate(cryptoObject, cancellationSignal, 0, this, null);
@@ -60,8 +60,8 @@ public class FingerprintHandler extends FingerprintManager.AuthenticationCallbac
 
   public boolean loadAuthentication(String key) {
 
-    fingerprintManager = (FingerprintManager) context.getSystemService(Context.FINGERPRINT_SERVICE);
-    keyguardManager = (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
+    mFingerprintManager = (FingerprintManager) mContext.getSystemService(Context.FINGERPRINT_SERVICE);
+    mKeyguardManager = (KeyguardManager) mContext.getSystemService(Context.KEYGUARD_SERVICE);
     boolean useFingerprint = false;
     if (isFullGranted()) {
       try {
@@ -71,8 +71,8 @@ public class FingerprintHandler extends FingerprintManager.AuthenticationCallbac
       }
 
       if (initCipher(key)) {
-        FingerprintManager.CryptoObject cryptoObject = new FingerprintManager.CryptoObject(cipher);
-        startAuth(fingerprintManager, cryptoObject);
+        FingerprintManager.CryptoObject cryptoObject = new FingerprintManager.CryptoObject(mCipher);
+        startAuth(mFingerprintManager, cryptoObject);
         useFingerprint = true;
       }
     }
@@ -83,32 +83,32 @@ public class FingerprintHandler extends FingerprintManager.AuthenticationCallbac
   private boolean isFingerprintAuthAvailable() {
     // The line below prevents the false positive inspection from Android Studio
     // noinspection ResourceType
-    return fingerprintManager.isHardwareDetected() && fingerprintManager.hasEnrolledFingerprints();
+    return mFingerprintManager.isHardwareDetected() && mFingerprintManager.hasEnrolledFingerprints();
   }
 
   private boolean isFullGranted() {
-    return isFingerprintAuthAvailable() && keyguardManager.isKeyguardSecure() &&
-      ActivityCompat.checkSelfPermission(context, Manifest.permission.USE_FINGERPRINT) == PackageManager.PERMISSION_GRANTED;
+    return isFingerprintAuthAvailable() && mKeyguardManager.isKeyguardSecure() &&
+      ActivityCompat.checkSelfPermission(mContext, Manifest.permission.USE_FINGERPRINT) == PackageManager.PERMISSION_GRANTED;
   }
 
   @Override
   public void onAuthenticationError(int errMsgId, CharSequence errString) {
-    listener.onAuthenticationError(errString.toString());
+    mListener.onAuthenticationError(errString.toString());
   }
 
   @Override
   public void onAuthenticationFailed() {
-    listener.onAuthenticationFailed();
+    mListener.onAuthenticationFailed();
   }
 
   @Override
   public void onAuthenticationHelp(int helpMsgId, CharSequence helpString) {
-    listener.onAuthenticationHelp(helpString.toString());
+    mListener.onAuthenticationHelp(helpString.toString());
   }
 
   @Override
   public void onAuthenticationSucceeded(FingerprintManager.AuthenticationResult result) {
-    listener.onAuthenticationSucceeded();
+    mListener.onAuthenticationSucceeded();
   }
 
   //Create the generateKey method that we’ll use to gain access to the Android keystore and generate the encryption key//
@@ -116,13 +116,13 @@ public class FingerprintHandler extends FingerprintManager.AuthenticationCallbac
   private void generateKey(String userKey) throws Exception {
     try {
       // Obtain a reference to the Keystore using the standard Android keystore container identifier (“AndroidKeystore”)//
-      keyStore = KeyStore.getInstance("AndroidKeyStore");
+      mKeyStore = KeyStore.getInstance("AndroidKeyStore");
 
       //Generate the key//
       KeyGenerator keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore");
 
       //Initialize an empty KeyStore//
-      keyStore.load(null);
+      mKeyStore.load(null);
 
       //Initialize the KeyGenerator//
       keyGenerator.init(new
@@ -156,7 +156,7 @@ public class FingerprintHandler extends FingerprintManager.AuthenticationCallbac
   private boolean initCipher(String userKey) {
     try {
       //Obtain a cipher instance and configure it with the properties required for fingerprint authentication//
-      cipher = Cipher.getInstance(
+      mCipher = Cipher.getInstance(
         KeyProperties.KEY_ALGORITHM_AES + "/"
           + KeyProperties.BLOCK_MODE_CBC + "/"
           + KeyProperties.ENCRYPTION_PADDING_PKCS7);
@@ -166,10 +166,10 @@ public class FingerprintHandler extends FingerprintManager.AuthenticationCallbac
     }
 
     try {
-      keyStore.load(null);
-      SecretKey key = (SecretKey) keyStore.getKey(userKey,
+      mKeyStore.load(null);
+      SecretKey key = (SecretKey) mKeyStore.getKey(userKey,
         null);
-      cipher.init(Cipher.ENCRYPT_MODE, key);
+      mCipher.init(Cipher.ENCRYPT_MODE, key);
       //Return true if the cipher has been initialized successfully//
       return true;
     } catch (KeyPermanentlyInvalidatedException e) {

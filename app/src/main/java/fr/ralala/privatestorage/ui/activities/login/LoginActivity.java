@@ -1,4 +1,4 @@
-package fr.ralala.privatestorage.ui.login;
+package fr.ralala.privatestorage.ui.activities.login;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -14,8 +14,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
 
-import fr.ralala.privatestorage.ui.common.DoubleBackActivity;
-import fr.ralala.privatestorage.ui.NamesActivity;
+import fr.ralala.privatestorage.ui.activities.common.DoubleBackActivity;
+import fr.ralala.privatestorage.ui.activities.NamesActivity;
 import fr.ralala.privatestorage.ui.utils.FingerprintHandler;
 import fr.ralala.privatestorage.R;
 import fr.ralala.privatestorage.utils.Sys;
@@ -32,7 +32,7 @@ import fr.ralala.privatestorage.ui.utils.UI;
  *******************************************************************************
  */
 public class LoginActivity extends DoubleBackActivity implements OnEditorActionListener, FingerprintHandler.FingerprintHandlerListener {
-  private EditText tokenET = null;
+  private EditText mTokenET = null;
 
   @Override
   public void onCreate(final Bundle savedInstanceState) {
@@ -47,13 +47,13 @@ public class LoginActivity extends DoubleBackActivity implements OnEditorActionL
 
     setContentView(R.layout.content_login);
 
-    tokenET = findViewById(R.id.tokenET);
-    tokenET.setOnEditorActionListener(this);
+    mTokenET = findViewById(R.id.tokenET);
+    mTokenET.setOnEditorActionListener(this);
   }
 
   public void onResume() {
     super.onResume();
-    tokenET.setText("");
+    mTokenET.setText("");
     Button loginBT = findViewById(R.id.loginBT);
     Button linkToForgotBT = findViewById(R.id.linkToForgotBT);
     ImageView fingerprintIV = findViewById(R.id.fingerprintIV);
@@ -65,7 +65,7 @@ public class LoginActivity extends DoubleBackActivity implements OnEditorActionL
     boolean useFingerprint = helper.loadAuthentication(getApp().getToken());
     int vF = useFingerprint ? View.VISIBLE : View.GONE;
     int vP = useFingerprint ? View.GONE : View.VISIBLE;
-    tokenET.setVisibility(vP);
+    mTokenET.setVisibility(vP);
     tokenTV.setVisibility(vP);
     tokenLayoutET.setVisibility(vP);
     loginBT.setVisibility(vP);

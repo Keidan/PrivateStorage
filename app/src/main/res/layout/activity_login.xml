@@ -11,7 +11,7 @@
     android:paddingEnd="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:descendantFocusability="blocksDescendants"
-    tools:context=".ui.login.LoginActivity">
+    tools:context=".ui.activities.login.LoginActivity">
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"

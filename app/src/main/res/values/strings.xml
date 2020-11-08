@@ -1,11 +1,15 @@
 <resources>
-    <string name="blowfish_cipher_key" translatable="false">YOUR_BLOWFISH_KEY_HERE</string>
+    <!--<string name="blowfish_cipher_key" translatable="false">YOUR_BLOWFISH_KEY_HERE</string>-->
+    <string name="blowfish_cipher_key" translatable="false">546A576E5A7234753778214125432A462D4A614E645267556B58703273357638</string>
+    <!-- <string name="app_key" translatable="false">YOUR_APP_KEY_HERE</string> -->
+    <string name="app_key" translatable="false">2qz9nxw2bn0m85d</string>
+
     <string name="text_start_https" translatable="false">https://</string>
     <string name="password_hint">Password &#8230;</string>
     <string name="loading">Loading &#8230;</string>
     <string name="app_name">Secure Storage</string>
     <string name="action_settings">Settings</string>
-	<string name="login">Login</string>
+	  <string name="login">Login</string>
     <string name="token">Password: </string>
     <string name="token_confirm">Confirm password: </string>
     <string name="forgot">Forgot password</string>
@@ -27,7 +31,7 @@
     <string name="fingerprint_instructions">Place your finger on the fingerprint sensor to sign in.</string>
     <string name="on_double_back_exit_text">Press once again to exit.</string>
     <string name="on_double_back_logout_text">Press once again to logout.</string>
-	<string name="exception">Exception</string>
+	  <string name="exception">Exception</string>
     <string name="error">Error</string>
     <string name="error_db_update">Unable to update the database</string>
     <string name="error_invalid_token_value">Invalid password.</string>
@@ -64,9 +68,12 @@
     <string name="pref_summary_security_parano">This mode locks the application when it\'s in the background or the screen is turned off.</string>
     <string name="pref_cat_title_import_export">Import/Export</string>
     <string name="pref_title_export">Export</string>
+    <string name="pref_title_dropbox">Dropbox</string>
     <string name="pref_title_import">Import</string>
     <string name="pref_summary_import_from_device">Import the database from the device.</string>
     <string name="pref_summary_export_to_device">Export the database to the device.</string>
+    <string name="pref_summary_export_to_dropbox">Export the database to dropbox.</string>
+    <string name="pref_summary_import_from_dropbox">Import the database from dropbox.</string>
     <string name="use_folder">Use this folder</string>
     <string name="use_file">Use this file</string>
     <string name="chooser_long_press_message">Long press to select.</string>
@@ -79,4 +86,8 @@
     <string name="error_no_files">No file found !</string>
     <string name="pref_title_device">Device</string>
     <string name="restart_from_db_update_vn">Database updated to version</string>
+    <string name="data_transfer">Data transfers, please wait&#8230;</string>
+    <string name="error_dropbox_upload">Unable to upload the file</string>
+    <string name="error_dropbox_download">Unable to download the file</string>
+    <string name="error_dropbox_list_directory">Unable to get the files list</string>
 </resources>

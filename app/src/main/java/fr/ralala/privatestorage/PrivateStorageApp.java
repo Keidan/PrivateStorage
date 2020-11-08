@@ -7,10 +7,12 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.PowerManager;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
+import fr.ralala.privatestorage.dropbox.DropboxImportExport;
 import fr.ralala.privatestorage.sql.SqlFactory;
-import fr.ralala.privatestorage.ui.SettingsActivity;
+import fr.ralala.privatestorage.ui.activities.SettingsActivity;
 import fr.ralala.privatestorage.utils.BlowfishCipher;
 
 /**
@@ -24,33 +26,50 @@ import fr.ralala.privatestorage.utils.BlowfishCipher;
  */
 public class PrivateStorageApp extends Application implements Application.ActivityLifecycleCallbacks {
 
+  private static final String PREFS_KEY_LAST_EXPORT = "pKeyLastExportType";
+  public static final String PREFS_VAL_LAST_EXPORT_DROPBOX = "dropbox";
+  public static final String PREFS_VAL_LAST_EXPORT_DEVICE = "device";
   private static final String TOKEN_KEY = "token";
-  private SharedPreferences m_sharedPref;
-  private SqlFactory sql;
-  private boolean installed = false;
-  private BlowfishCipher blowfishCipher = null;
-  private Class<?> from = null;
-  private int numStarted = 0;
-  private boolean isInBackground = false;
-  private String currentName = null;
+  private SharedPreferences mSharedPref;
+  private SqlFactory mSql;
+  private boolean mInstalled = false;
+  private BlowfishCipher mBlowfishCipher = null;
+  private Class<?> mFrom = null;
+  private int mNumStarted = 0;
+  private boolean mIsInBackground = false;
+  private String mCurrentName = null;
+  private DropboxImportExport mDropboxImportExport = null;
+
   public enum ParanoiacMode {
     BOTH,
     BACKGROUND,
     SCREEN_OFF;
 
     public static ParanoiacMode fromString(Context c, String s) {
-      String array[] = c.getResources().getStringArray(R.array.values_security_mode);
+      String[] array = c.getResources().getStringArray(R.array.values_security_mode);
       return s.equals(array[1]) ? BACKGROUND : s.equals(array[2]) ? SCREEN_OFF : BOTH;
     }
   }
 
+  /**
+   * Called by Android to create the application context.
+   */
+  @Override
+  public void onCreate() {
+    super.onCreate();
+    mDropboxImportExport = new DropboxImportExport();
+    String last = getLastExportType();
+    if(last == null || last.isEmpty())
+      setLastExportType(PREFS_VAL_LAST_EXPORT_DROPBOX);
+  }
+
   public Throwable install() {
-    if(installed) return null;
+    if(mInstalled) return null;
     try {
-      blowfishCipher = new BlowfishCipher();
-      sql = new SqlFactory(blowfishCipher, this);
-      m_sharedPref = getSharedPreferences(getString(R.string.app_name), Context.MODE_PRIVATE);
-      installed = true;
+      mBlowfishCipher = new BlowfishCipher();
+      mSql = new SqlFactory(mBlowfishCipher, this);
+      mSharedPref = getSharedPreferences(getString(R.string.app_name), Context.MODE_PRIVATE);
+      mInstalled = true;
       registerActivityLifecycleCallbacks(this);
       return null;
     } catch (final Exception e) {
@@ -59,34 +78,30 @@ public class PrivateStorageApp extends Application implements Application.Activi
     }
   }
 
-  public BlowfishCipher getBlowfishCipher() {
-    return blowfishCipher;
-  }
-
   public SqlFactory getSql() {
-    return sql;
+    return mSql;
   }
 
   public ParanoiacMode getParanoiacMode() {
-    return ParanoiacMode.fromString(this, m_sharedPref.getString(
+    return ParanoiacMode.fromString(this, mSharedPref.getString(
       SettingsActivity.PREFS_KEY_SECURITY_PARANOIAC,
       getResources().getStringArray(R.array.values_security_mode)[0]));
   }
 
   public void setParanoiacMode(String mode) {
-    SharedPreferences.Editor e = m_sharedPref.edit();
+    SharedPreferences.Editor e = mSharedPref.edit();
     e.putString(SettingsActivity.PREFS_KEY_SECURITY_PARANOIAC, mode);
     e.apply();
   }
 
   public boolean isValidToken() {
-    return m_sharedPref.contains(TOKEN_KEY);
+    return mSharedPref.contains(TOKEN_KEY);
   }
 
   public boolean isValidToken(String s) {
     try {
-      return !s.isEmpty() && m_sharedPref.contains(TOKEN_KEY) && m_sharedPref.getString(TOKEN_KEY, "").equals(
-        blowfishCipher.encrypt(getString(R.string.blowfish_cipher_key), s));
+      return !s.isEmpty() && mSharedPref.contains(TOKEN_KEY) && mSharedPref.getString(TOKEN_KEY, "").equals(
+          mBlowfishCipher.encrypt(getString(R.string.blowfish_cipher_key), s));
     } catch(Exception e) {
       Log.e(getClass().getSimpleName(), "Exception: " + e.getMessage(), e);
       return false;
@@ -94,7 +109,7 @@ public class PrivateStorageApp extends Application implements Application.Activi
   }
 
   public String getToken() {
-    return m_sharedPref.getString(TOKEN_KEY, "");
+    return mSharedPref.getString(TOKEN_KEY, "");
   }
 
   /**
@@ -102,12 +117,12 @@ public class PrivateStorageApp extends Application implements Application.Activi
    * @param s Null to delete.
    */
   public void setToken(String s) {
-    SharedPreferences.Editor ed = m_sharedPref.edit();
+    SharedPreferences.Editor ed = mSharedPref.edit();
     if(s == null || s.isEmpty())
       ed.remove(TOKEN_KEY);
     else {
       try {
-        ed.putString(TOKEN_KEY, blowfishCipher.encrypt(getString(R.string.blowfish_cipher_key), s));
+        ed.putString(TOKEN_KEY, mBlowfishCipher.encrypt(getString(R.string.blowfish_cipher_key), s));
       } catch(Exception e) {
         Log.e(getClass().getSimpleName(), "Exception: " + e.getMessage(), e);
         ed.remove(TOKEN_KEY);
@@ -117,11 +132,11 @@ public class PrivateStorageApp extends Application implements Application.Activi
   }
 
   public Class<?> getFrom() {
-    return from;
+    return mFrom;
   }
 
   public void setFrom(Class<?> from) {
-    this.from = from;
+    mFrom = from;
   }
 
   public boolean isScreenOn() {
@@ -138,15 +153,23 @@ public class PrivateStorageApp extends Application implements Application.Activi
   }
 
   public boolean isInBackground() {
-    return isInBackground;
+    return mIsInBackground;
   }
 
   public String getCurrentName() {
-    return currentName;
+    return mCurrentName;
   }
 
   public void setCurrentName(String currentName) {
-    this.currentName = currentName;
+    mCurrentName = currentName;
+  }
+
+  /**
+   * Returns the DropboxImportExport object.
+   * @return DropboxImportExport
+   */
+  public DropboxImportExport getDropboxImportExport() {
+    return mDropboxImportExport;
   }
 
   /******* IMPL ********/
@@ -157,11 +180,11 @@ public class PrivateStorageApp extends Application implements Application.Activi
 
   @Override
   public void onActivityStarted(Activity activity) {
-    if (numStarted == 0) {
-      isInBackground = false;
+    if (mNumStarted == 0) {
+      mIsInBackground = false;
       Log.e(getClass().getSimpleName(), "app went to foreground");
     }
-    numStarted++;
+    mNumStarted++;
   }
 
   @Override
@@ -174,9 +197,9 @@ public class PrivateStorageApp extends Application implements Application.Activi
 
   @Override
   public void onActivityStopped(Activity activity) {
-    numStarted--;
-    if (numStarted == 0) {
-      isInBackground = true;
+    mNumStarted--;
+    if (mNumStarted == 0) {
+      mIsInBackground = true;
       Log.e(getClass().getSimpleName(), "app went to background");
     }
   }
@@ -187,5 +210,33 @@ public class PrivateStorageApp extends Application implements Application.Activi
 
   @Override
   public void onActivityDestroyed(Activity activity) {
+  }
+
+
+  /* ----------------------------------
+   * Global configuration
+   * ----------------------------------
+   */
+
+  /**
+   * Returns the last export mode used.
+   * Will change the behavior of the export icon
+   * @return String (see PREF_VAL_LAST_EXPORT_xxxxxxx)
+   */
+  public String getLastExportType() {
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+    return prefs.getString(PREFS_KEY_LAST_EXPORT, PREFS_VAL_LAST_EXPORT_DROPBOX);
+  }
+
+  /**
+   * Sets the last export mode used.
+   * Will change the behavior of the export icon
+   * @param last see PREF_VAL_LAST_EXPORT_xxxxxxx
+   */
+  public void setLastExportType(String last) {
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+    SharedPreferences.Editor e = prefs.edit();
+    e.putString(PREFS_KEY_LAST_EXPORT, last);
+    e.apply();
   }
 }

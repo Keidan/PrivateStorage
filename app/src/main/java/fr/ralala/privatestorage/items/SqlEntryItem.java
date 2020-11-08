@@ -10,7 +10,7 @@ package fr.ralala.privatestorage.items;
  *******************************************************************************
  */
 public class SqlEntryItem extends SqlItem{
-  private Type type = Type.NONE;
+  private Type mType = Type.NONE;
 
   public enum Type {
     NONE,
@@ -31,8 +31,6 @@ public class SqlEntryItem extends SqlItem{
           return Type.URL;
         case 3:
           return Type.PHONE;
-        case 4:
-          return Type.TEXT;
         case 5:
           return Type.COMPOSE;
         case 6:
@@ -52,8 +50,6 @@ public class SqlEntryItem extends SqlItem{
           return 2;
         case PHONE:
           return 3;
-        case TEXT:
-          return 4;
         case COMPOSE:
           return 5;
         case PASSWORD:
@@ -72,21 +68,21 @@ public class SqlEntryItem extends SqlItem{
     setId(id);
     setKey(key);
     setValue(value);
-    this.type = type;
+    setType(type);
   }
 
   public void set(SqlEntryItem sti) {
     setId(sti.getId());
     setKey(sti.getKey());
     setValue(sti.getValue());
-    setType(sti.type);
+    setType(sti.mType);
   }
 
   public Type getType() {
-    return type;
+    return mType;
   }
 
   public void setType(Type type) {
-    this.type = type;
+    mType = type;
   }
 }

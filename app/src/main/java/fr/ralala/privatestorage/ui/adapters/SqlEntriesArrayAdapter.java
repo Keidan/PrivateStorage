@@ -28,9 +28,9 @@ import fr.ralala.privatestorage.items.SqlItem;
  *******************************************************************************
  */
 public class SqlEntriesArrayAdapter extends SqlItemArrayAdapter {
-  private int valueVisible = -1;
+  private int mValueVisible = -1;
 
-  private class ViewHolder {
+  private static class ViewHolder {
     TextView key = null;
     TextView value = null;
     ImageView type = null;
@@ -48,11 +48,11 @@ public class SqlEntriesArrayAdapter extends SqlItemArrayAdapter {
                @NonNull final ViewGroup parent) {
     View view = convertView;
     ViewHolder holder;
-    final SqlItem t = kvlist.get(position);
+    final SqlItem t = mKvlist.get(position);
     if (view == null) {
-      final LayoutInflater vi = (LayoutInflater) c.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+      final LayoutInflater vi = (LayoutInflater) mC.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
       assert vi != null;
-      view = vi.inflate(id, null);
+      view = vi.inflate(mId, null);
       holder = new ViewHolder();
       holder.key = view.findViewById(R.id.key);
       holder.value = view.findViewById(R.id.value);
@@ -65,10 +65,9 @@ public class SqlEntriesArrayAdapter extends SqlItemArrayAdapter {
     }
     holder.key.setText(t.getKey());
 
-    Log.e("TAG", "valueVisible:"+valueVisible);
     holder.value.setText(t.getValue());
 
-    if(SqlEntryItem.class.isInstance(t)) {
+    if(t instanceof SqlEntryItem) {
       SqlEntryItem sei = (SqlEntryItem)t;
       switch (sei.getType()) {
         case EMAIL:
@@ -86,7 +85,7 @@ public class SqlEntriesArrayAdapter extends SqlItemArrayAdapter {
         case PASSWORD: {
           holder.type.setImageResource(R.mipmap.ic_password);
           String val = t.getValue();
-          holder.value.setText(valueVisible != position ? val.replaceAll("(?s).", "*") : val);
+          holder.value.setText(mValueVisible != position ? val.replaceAll("(?s).", "*") : val);
           break;
         }
         case TEXT:
@@ -97,23 +96,19 @@ public class SqlEntriesArrayAdapter extends SqlItemArrayAdapter {
     /* Show the popup menu if the user click on the 3-dots item. */
     try {
       holder.menu.setOnClickListener((vv) -> {
-        switch (vv.getId()) {
-          case R.id.menu:
-            final PopupMenu popup = new PopupMenu(c, vv);
-            MenuPopupHelper menuHelper = new MenuPopupHelper(c, (MenuBuilder) popup.getMenu(), vv);
-            menuHelper.setForceShowIcon(true);
-            popup.getMenuInflater().inflate(popupView, popup.getMenu());
-            menuHelper.show();
-            popup.setOnMenuItemClickListener((item) -> {
-              if (listener != null && R.id.edit == item.getItemId())
-                listener.onMenuEdit(t);
-              else if (listener != null && R.id.delete == item.getItemId())
-                listener.onMenuDelete(t);
-              return true;
-            });
-            break;
-          default:
-            break;
+        if (vv.getId() == R.id.menu) {
+          final PopupMenu popup = new PopupMenu(mC, vv);
+          MenuPopupHelper menuHelper = new MenuPopupHelper(mC, (MenuBuilder) popup.getMenu(), vv);
+          menuHelper.setForceShowIcon(true);
+          popup.getMenuInflater().inflate(mPopupView, popup.getMenu());
+          menuHelper.show();
+          popup.setOnMenuItemClickListener((item) -> {
+            if (mListener != null && R.id.edit == item.getItemId())
+              mListener.onMenuEdit(t);
+            else if (mListener != null && R.id.delete == item.getItemId())
+              mListener.onMenuDelete(t);
+            return true;
+          });
         }
       });
     } catch (Exception e) {
@@ -123,7 +118,7 @@ public class SqlEntriesArrayAdapter extends SqlItemArrayAdapter {
   }
 
   public void setValueVisible(int valueVisible) {
-    this.valueVisible = valueVisible;
+    mValueVisible = valueVisible;
     notifyDataSetChanged();
   }
 }

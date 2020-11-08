@@ -1,4 +1,4 @@
-package fr.ralala.privatestorage.ui.login;
+package fr.ralala.privatestorage.ui.activities.login;
 
 import fr.ralala.privatestorage.R;
 import fr.ralala.privatestorage.PrivateStorageApp;
@@ -22,7 +22,7 @@ import android.view.View;
  *******************************************************************************
  */
 public class ForgotActivity extends AppCompatActivity {
-  private SqlFactory sql = null;
+  private SqlFactory mSql = null;
 
   @Override
   public void onCreate(final Bundle savedInstanceState) {
@@ -32,13 +32,13 @@ public class ForgotActivity extends AppCompatActivity {
     Throwable t;
     if((t = app.install()) != null)
       UI.showAlertDialog(this, R.string.exception, t.getMessage());
-    sql = app.getSql();
+    mSql = app.getSql();
     ((PrivateStorageApp)getApplicationContext()).setFrom(null);
   }
   
   public void actionReset(final View v) {
     final android.view.View.OnClickListener yes = (vv) -> {
-      sql.removeAll();
+      mSql.removeAll();
       onBackPressed();
     };
     UI.showConfirmDialog(this, R.string.reset,

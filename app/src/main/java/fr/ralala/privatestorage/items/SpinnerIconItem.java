@@ -10,19 +10,19 @@ package fr.ralala.privatestorage.items;
  *******************************************************************************
  */
 public class SpinnerIconItem {
-  private int icon;
-  private String text;
+  private final int mIcon;
+  private final String mText;
 
   public SpinnerIconItem(int icon, String text) {
-    this.icon = icon;
-    this.text = text;
+    mIcon = icon;
+    mText = text;
   }
 
   public String getText() {
-    return text;
+    return mText;
   }
 
   public int getIcon() {
-    return icon;
+    return mIcon;
   }
 }

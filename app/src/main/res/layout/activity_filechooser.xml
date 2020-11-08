@@ -6,7 +6,7 @@
     android:descendantFocusability="blocksDescendants"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.FileChooserActivity">
+    tools:context=".ui.activities.FileChooserActivity">
     <ListView
         android:id="@+id/list"
         android:layout_width="match_parent"

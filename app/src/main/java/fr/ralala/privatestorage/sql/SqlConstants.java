@@ -16,7 +16,7 @@ public interface SqlConstants {
    String COL_ID                     = "c_id";
    String COL_KEY                    = "c_key";
    String COL_VALUE                  = "c_value";
-   String COL_TYPE                  = "c_type";
+   String COL_TYPE                   = "c_type";
    int    NUM_COL_ID                 = 0;
    int    NUM_COL_KEY                = 1;
    int    NUM_COL_VAL                = 2;

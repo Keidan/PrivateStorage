@@ -21,13 +21,13 @@ import java.util.Locale;
  */
 public abstract class SqlItemArrayAdapter extends BaseAdapter {
 
-  Context c = null;
-  protected int id = 0;
-  List<SqlItem> kvlist = null;
-  private final List<SqlItem> arraylist;
-  SqlItemArrayAdapterMenuListener listener = null;
-  int popupView = 0;
-  private boolean viewAll = true;
+  protected Context mC;
+  protected int mId;
+  protected List<SqlItem> mKvlist;
+  private final List<SqlItem> mArraylist;
+  protected SqlItemArrayAdapterMenuListener mListener;
+  protected int mPopupView;
+  private boolean mViewAll = true;
 
   public interface SqlItemArrayAdapterMenuListener {
     void onMenuEdit(SqlItem t);
@@ -36,37 +36,37 @@ public abstract class SqlItemArrayAdapter extends BaseAdapter {
 
   SqlItemArrayAdapter(final Context context, final int textViewResourceId,
                              final List<SqlItem> objects, SqlItemArrayAdapterMenuListener listener, int popupView) {
-    this.c = context;
-    this.id = textViewResourceId;
-    this.listener = listener;
-    this.popupView = popupView;
-    this.kvlist = objects;
-    this.arraylist = new ArrayList<>();
-    this.arraylist.addAll(kvlist);
+    mC = context;
+    mId = textViewResourceId;
+    mListener = listener;
+    mPopupView = popupView;
+    mKvlist = objects;
+    mArraylist = new ArrayList<>();
+    mArraylist.addAll(mKvlist);
   }
 
   public boolean contains(SqlItem sti) {
-    for(SqlItem s : arraylist)
+    for(SqlItem s : mArraylist)
       if( s.toString().equals(sti.toString()))
         return true;
     return false;
   }
 
   public void add(SqlItem sti) {
-    kvlist.add(sti);
-    arraylist.add(sti);
-    kvlist.sort(Comparator.comparing(SqlItem::getKey));
+    mKvlist.add(sti);
+    mArraylist.add(sti);
+    mKvlist.sort(Comparator.comparing(SqlItem::getKey));
     notifyDataSetChanged();
   }
 
   @Override
   public int getCount() {
-    return kvlist.size();
+    return mKvlist.size();
   }
 
   @Override
   public SqlItem getItem(int position) {
-    return kvlist.get(position);
+    return mKvlist.get(position);
   }
 
   @Override
@@ -75,22 +75,22 @@ public abstract class SqlItemArrayAdapter extends BaseAdapter {
   }
 
   public void remove(final SqlItem sti) {
-    kvlist.remove(sti);
-    arraylist.remove(sti);
+    mKvlist.remove(sti);
+    mArraylist.remove(sti);
     super.notifyDataSetChanged();
   }
 
   // Filter Class
   public void filter(String charText) {
     charText = charText.toLowerCase(Locale.getDefault());
-    kvlist.clear();
+    mKvlist.clear();
     if (charText.length() == 0) {
-      kvlist.addAll(arraylist);
+      mKvlist.addAll(mArraylist);
     } else {
-      for (final SqlItem kv : arraylist) {
+      for (final SqlItem kv : mArraylist) {
         if (kv.getKey().toLowerCase(Locale.getDefault()).contains(charText)
           || kv.getValue().toLowerCase(Locale.getDefault()).contains(charText)) {
-          kvlist.add(kv);
+          mKvlist.add(kv);
         }
       }
     }
@@ -98,14 +98,14 @@ public abstract class SqlItemArrayAdapter extends BaseAdapter {
   }
 
   public boolean isViewAll() {
-    return viewAll;
+    return mViewAll;
   }
 
   public void setViewAll(boolean viewAll) {
-    this.viewAll = viewAll;
-    kvlist.clear();
+    mViewAll = viewAll;
+    mKvlist.clear();
     if (viewAll)
-      kvlist.addAll(arraylist);
+      mKvlist.addAll(mArraylist);
     notifyDataSetChanged();
   }
 }
