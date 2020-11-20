@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  android:id="@+id/ll"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:orientation="vertical"
+  android:layout_marginBottom="20sp"
+  android:layout_marginStart="20sp"
+  android:layout_marginEnd="20sp">
+
+
+  <TextView
+    android:id="@+id/tv"
+    android:text="@string/type"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="20sp"
+    android:layout_marginEnd="20sp"
+    android:layout_marginStart="5sp"
+    android:layout_marginTop="40sp"/>
+
+  <Spinner
+    android:id="@+id/spinner"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"/>
+
+  <android.support.design.widget.TextInputLayout
+    android:id="@+id/tilName"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <android.support.design.widget.TextInputEditText
+      android:id="@+id/tietName"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:hint="@string/name"
+      android:inputType="text"
+      android:imeOptions="actionDone"/>
+  </android.support.design.widget.TextInputLayout>
+
+  <android.support.design.widget.TextInputLayout
+    android:id="@+id/tilValue1"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <android.support.design.widget.TextInputEditText
+      android:id="@+id/tietValue1"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:hint="@string/new_entry_hint_value"
+      android:inputType="text"
+      android:imeOptions="actionDone"/>
+  </android.support.design.widget.TextInputLayout>
+
+  <android.support.design.widget.TextInputLayout
+    android:id="@+id/tilValue2"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <android.support.design.widget.TextInputEditText
+      android:id="@+id/tietValue2"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:hint="@string/new_entry_hint_value"
+      android:inputType="text"
+      android:imeOptions="actionDone"/>
+  </android.support.design.widget.TextInputLayout>
+
+</LinearLayout>

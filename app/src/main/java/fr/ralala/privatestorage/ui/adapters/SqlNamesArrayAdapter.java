@@ -1,5 +1,6 @@
 package fr.ralala.privatestorage.ui.adapters;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v7.view.menu.MenuBuilder;
@@ -41,6 +42,7 @@ public class SqlNamesArrayAdapter extends SqlItemArrayAdapter {
     super(context, textViewResourceId, objects, listener, popupView);
   }
 
+  @SuppressLint("RestrictedApi")
   @Override
   public @NonNull
   View getView(final int position, final View convertView,

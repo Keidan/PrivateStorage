@@ -1,5 +1,6 @@
 package fr.ralala.privatestorage.ui.adapters;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v7.view.menu.MenuBuilder;
@@ -42,6 +43,7 @@ public class SqlEntriesArrayAdapter extends SqlItemArrayAdapter {
     super(context, textViewResourceId, objects, listener, popupView);
   }
 
+  @SuppressLint("RestrictedApi")
   @Override
   public @NonNull
   View getView(final int position, final View convertView,
@@ -86,6 +88,14 @@ public class SqlEntriesArrayAdapter extends SqlItemArrayAdapter {
           holder.type.setImageResource(R.mipmap.ic_password);
           String val = t.getValue();
           holder.value.setText(mValueVisible != position ? val.replaceAll("(?s).", "*") : val);
+          break;
+        }
+        case LOGIN: {
+          holder.type.setImageResource(R.mipmap.ic_login);
+          String [] split = t.getValue().split("\n");
+          String val = mC.getString(R.string.login) + ": " + split[0] + "\n";
+          val += mC.getString(R.string.password) + ": " + (mValueVisible != position ? split[1].replaceAll("(?s).", "*") : split[1]);
+          holder.value.setText(val);
           break;
         }
         case TEXT:

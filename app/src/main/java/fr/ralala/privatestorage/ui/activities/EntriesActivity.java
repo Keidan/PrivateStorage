@@ -23,7 +23,6 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -101,7 +100,7 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
     FloatingActionButton fab = findViewById(R.id.fab);
     fab.setOnClickListener((view) -> {
       mCurrentItem = null;
-      showInputDialog3(R.string.new_entry_title, R.string.new_entry_hint_key, R.string.new_entry_hint_value, REQ_ID_ADD);
+      showInputDialog(R.string.new_entry_title, R.string.new_entry_hint_key, REQ_ID_ADD);
     });
     ((PrivateStorageApp)getApplicationContext()).setFrom(this.getClass());
 
@@ -196,12 +195,26 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
             vibrator.vibrate(50);
           Sys.openDialer(this, item.getValue());
           break;
-        case PASSWORD:
-          if(vibrator != null)
+        case PASSWORD: {
+          if (vibrator != null)
             vibrator.vibrate(50);
           TextView tv = view.findViewById(R.id.value);
           mAdapter.setValueVisible(tv.getText().toString().equals(item.getValue()) ? -1 : position);
           break;
+        }
+        case LOGIN: {
+          if (vibrator != null)
+            vibrator.vibrate(50);
+          TextView tv = view.findViewById(R.id.value);
+          String [] split = tv.getText().toString().split("\n");
+          String val = "";
+          if(split[0].startsWith(getString(R.string.login) + ": "))
+            val += split[0].substring((getString(R.string.login) + ": ").length());
+          if(split[1].startsWith(getString(R.string.password) + ": "))
+            val += "\n" + split[1].substring((getString(R.string.password) + ": ").length());
+          mAdapter.setValueVisible(val.equals(item.getValue()) ? -1 : position);
+          break;
+        }
         case COMPOSE:
         case TEXT:
           if(vibrator != null)
@@ -219,9 +232,12 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
     return true;
   }
 
-  public boolean inputText3(int reqId, int type, String text1, String text2) {
+  public boolean validateInputText(int reqId, int type, String text1, String text2, String text3) {
     if(!text1.isEmpty() && !text2.isEmpty()) {
-      SqlEntryItem sti = new SqlEntryItem(mCurrentItem == null ? 0 : mCurrentItem.getId(), SqlEntryItem.Type.fromInt(type + 1), text1, text2);
+      String value = text2;
+      if(text3 != null && !text3.isEmpty())
+        value += "\n" + text3;
+      SqlEntryItem sti = new SqlEntryItem(mCurrentItem == null ? 0 : mCurrentItem.getId(), SqlEntryItem.Type.fromInt(type + 1), text1, value);
 
       switch (sti.getType()) {
         case EMAIL:
@@ -288,7 +304,9 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
 
   public void onMenuEdit(SqlItem t) {
     mCurrentItem = (SqlEntryItem)t;
-    showInputDialog3(R.string.new_entry_title, R.string.new_entry_hint_key, R.string.new_entry_hint_value, mCurrentItem.getType(), t.getKey(), t.getValue(), REQ_ID_EDIT);
+    String [] split = t.getValue().split("\n");
+    showInputDialog(R.string.new_entry_title, R.string.new_entry_hint_key, mCurrentItem.getType(),
+        t.getKey(), split[0], split.length == 2 ? split[1] : null, REQ_ID_EDIT);
   }
 
   public void onMenuDelete(final SqlItem t) {
@@ -308,28 +326,31 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
   }
 
 
-  public void showInputDialog3(final int title, final int hint1, final int hint2, final int reqId) {
-    showInputDialog3(title, hint1, hint2, SqlEntryItem.Type.TEXT, null, null, reqId);
+  public void showInputDialog(final int title, final int hint, final int reqId) {
+    showInputDialog(title, hint, SqlEntryItem.Type.TEXT, null, null, null, reqId);
   }
 
-  public void showInputDialog3(final int title, final int hint1, final int hint2, final SqlEntryItem.Type type, final String def1, final String def2, final int reqId) {
+  public void showInputDialog(final int title, final int hint, final SqlEntryItem.Type type, final String def1, final String def2, final String def3, final int reqId) {
     AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
     builder.setTitle(title);
-    final TextInputEditText input1 = new TextInputEditText(this);
-    final TextInputEditText input2 = new TextInputEditText(this);
-    final Spinner spinner = new Spinner(this);
-    final TextInputLayout inputLayout2 = new TextInputLayout(this);
-    final TextInputLayout inputLayout1 = new TextInputLayout(this);
-    input1.setInputType(InputType.TYPE_TEXT_FLAG_CAP_WORDS);
-    if(hint1 != Integer.MAX_VALUE)
-      input1.setHint(hint1);
-    if(hint2 != Integer.MAX_VALUE)
-      input2.setHint(hint2);
+    View alertLayout = getLayoutInflater().inflate(R.layout.entry_input_dialog, null);
+    builder.setView(alertLayout);
+    final TextInputEditText tietName = alertLayout.findViewById(R.id.tietName);
+    final TextInputEditText tietValue1 = alertLayout.findViewById(R.id.tietValue1);
+    final TextInputEditText tietValue2 = alertLayout.findViewById(R.id.tietValue2);
+    final Spinner spinner = alertLayout.findViewById(R.id.spinner);
+    final TextInputLayout tilName = alertLayout.findViewById(R.id.tilName);
+    final TextInputLayout tilValue1 = alertLayout.findViewById(R.id.tilValue1);
+    final TextInputLayout tilValue2 = alertLayout.findViewById(R.id.tilValue2);
+    tietName.setInputType(InputType.TYPE_TEXT_FLAG_CAP_WORDS);
+    if(hint != Integer.MAX_VALUE)
+      tilName.setHint(getString(hint));
     if(def1 != null)
-      input1.setText(def1);
+      tietName.setText(def1);
     if(def2 != null)
-      input2.setText(def2);
+      tietValue1.setText(def2);
+    if(def3 != null)
+      tietValue2.setText(def3);
     List<SpinnerIconItem> list = new ArrayList<>();
     list.add(new SpinnerIconItem(R.mipmap.ic_mail, getString(R.string.email)));
     list.add(new SpinnerIconItem(R.mipmap.ic_url, getString(R.string.url)));
@@ -337,6 +358,7 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
     list.add(new SpinnerIconItem(R.mipmap.ic_copy, getString(R.string.text)));
     list.add(new SpinnerIconItem(R.mipmap.ic_compose, getString(R.string.compose)));
     list.add(new SpinnerIconItem(R.mipmap.ic_password, getString(R.string.password)));
+    list.add(new SpinnerIconItem(R.mipmap.ic_login, getString(R.string.login)));
     final SpinnerIconArrayAdapter ladapter = new SpinnerIconArrayAdapter(this, list);
     spinner.setAdapter(ladapter);
     spinner.setSelection(SqlEntryItem.Type.toInt(type) - 1);
@@ -347,31 +369,53 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
         if(item != null) {
           int icon = item.getIcon();
           if(icon == R.mipmap.ic_mail) {
-            input2.setInputType(InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS);
-            inputLayout2.setPasswordVisibilityToggleEnabled(false);
+            tietValue1.setInputType(InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS);
+            tilValue1.setPasswordVisibilityToggleEnabled(false);
+            tilValue2.setVisibility(View.GONE);
+            tilValue1.setHint(getString(R.string.email));
           }
-          if(icon == R.mipmap.ic_phone) {
-            input2.setInputType(InputType.TYPE_CLASS_PHONE);
-            inputLayout2.setPasswordVisibilityToggleEnabled(false);
+          else if(icon == R.mipmap.ic_phone) {
+            tietValue1.setInputType(InputType.TYPE_CLASS_PHONE);
+            tilValue1.setPasswordVisibilityToggleEnabled(false);
+            tilValue2.setVisibility(View.GONE);
+            tilValue1.setHint(getString(R.string.phone));
           }
-          if(icon == R.mipmap.ic_url) {
-            input2.setInputType(InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS);
-            inputLayout2.setPasswordVisibilityToggleEnabled(false);
-            if (input2.getText().toString().isEmpty())
-              input2.setText(R.string.text_start_https);
+          else if(icon == R.mipmap.ic_url) {
+            tietValue1.setInputType(InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS);
+            tilValue1.setPasswordVisibilityToggleEnabled(false);
+            tilValue2.setVisibility(View.GONE);
+            if (tietValue1.getText().toString().isEmpty())
+              tietValue1.setText(R.string.text_start_https);
+            tilValue1.setHint(getString(R.string.url));
           }
-          if(icon == R.mipmap.ic_compose) {
-            input2.setInputType(InputType.TYPE_CLASS_NUMBER);
-            inputLayout2.setPasswordVisibilityToggleEnabled(false);
+          else if(icon == R.mipmap.ic_compose) {
+            tietValue1.setInputType(InputType.TYPE_CLASS_NUMBER);
+            tilValue1.setPasswordVisibilityToggleEnabled(false);
+            tilValue2.setVisibility(View.GONE);
+            tilValue1.setHint(getString(R.string.compose));
           }
-          if(icon == R.mipmap.ic_password) {
-            input2.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-            inputLayout2.setPasswordVisibilityToggleEnabled(true);
-            inputLayout2.setPasswordVisibilityToggleTintList(getColorStateList(R.color.textColor));
+          else if(icon == R.mipmap.ic_password) {
+            tietValue1.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+            tilValue1.setPasswordVisibilityToggleEnabled(true);
+            tilValue1.setPasswordVisibilityToggleTintList(getColorStateList(R.color.textColor));
+            tilValue2.setVisibility(View.GONE);
+            tilValue1.setHint(getString(R.string.password));
+          }
+          else if(icon == R.mipmap.ic_login) {
+            tietValue1.setInputType(InputType.TYPE_CLASS_TEXT);
+            tietValue2.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+            tilValue1.setPasswordVisibilityToggleEnabled(false);
+            tilValue2.setPasswordVisibilityToggleEnabled(true);
+            tilValue2.setPasswordVisibilityToggleTintList(getColorStateList(R.color.textColor));
+            tilValue2.setVisibility(View.VISIBLE);
+            tilValue1.setHint(getString(R.string.login));
+            tilValue2.setHint(getString(R.string.password));
           }
           else {
-            input2.setInputType(InputType.TYPE_CLASS_TEXT);
-            inputLayout2.setPasswordVisibilityToggleEnabled(false);
+            tietValue1.setInputType(InputType.TYPE_CLASS_TEXT);
+            tilValue1.setPasswordVisibilityToggleEnabled(false);
+            tilValue2.setVisibility(View.GONE);
+            tilValue1.setHint(getString(R.string.new_entry_hint_value));
           }
         }
       }
@@ -382,31 +426,6 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
       }
     });
 
-    final TextView tv = new TextView(this);
-    tv.setText(R.string.type);
-
-    LinearLayout parent = new LinearLayout(this);
-
-    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-    lp.setMargins(20, 0, 0, 20);
-    LinearLayout.LayoutParams lp1 = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-    LinearLayout.LayoutParams lp2 = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-    parent.setLayoutParams(lp);
-    parent.setOrientation(LinearLayout.VERTICAL);
-
-    LinearLayout.LayoutParams lpTop = new LinearLayout.LayoutParams(
-      LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-    /* int left, int top, int right, int bottom */
-    lpTop.setMargins(20, 40, 0, 20);
-    parent.addView(tv, lpTop);
-    parent.addView(spinner, lp);
-    inputLayout1.addView(input1, 0, lp1);
-    parent.addView(inputLayout1, lp);
-    inputLayout2.addView(input2, 0, lp2);
-    parent.addView(inputLayout2, lp);
-
-    builder.setView(parent);
-
     // Set up the buttons
     builder.setPositiveButton(getString(R.string.ok), null);
     builder.setNegativeButton(getString(R.string.cancel), null);
@@ -414,7 +433,7 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
     mAlertDialog.setOnShowListener((dialog) -> {
       Button b = mAlertDialog.getButton(AlertDialog.BUTTON_POSITIVE);
       b.setOnClickListener((view) -> {
-        if(inputText3(reqId, spinner.getSelectedItemPosition(), input1.getText().toString(), input2.getText().toString()))
+        if(validateInputText(reqId, spinner.getSelectedItemPosition(), tietName.getText().toString(), tietValue1.getText().toString(), tietValue2.getText().toString()))
           mAlertDialog.dismiss();
       });
     });
