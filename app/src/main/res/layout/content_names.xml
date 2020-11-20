@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.widget.ListView
 
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/content_names"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    android:fitsSystemWindows="true"
-    tools:context=".ui.activities.NamesActivity">
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:id="@+id/content_names"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:fitsSystemWindows="true"
+  android:paddingTop="@dimen/activity_vertical_margin"
+  tools:context=".ui.activities.NamesActivity">
 
 </android.widget.ListView>
 

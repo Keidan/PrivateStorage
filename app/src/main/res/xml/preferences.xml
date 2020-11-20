@@ -1,31 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" android:key="prefScreenImportExport">
-    <PreferenceCategory android:title="@string/pref_cat_title_security" android:key="prefCatSecurity" >
-        <ListPreference
-            android:key="prefSecurityParanoList"
-            android:defaultValue="0"
-            android:entries="@array/entries_security_mode"
-            android:summary="@string/pref_summary_security_parano"
-            android:entryValues="@array/values_security_mode"
-            android:title="@string/pref_title_security_parano" />
-    </PreferenceCategory>
-    <PreferenceCategory android:title="@string/pref_cat_title_import_export" android:key="prefCatDatabaseExport" >
-        <Preference
-            android:key="prefExportToDevice"
-            android:title="@string/pref_title_export"
-            android:summary="@string/pref_summary_export_to_device"/>
-        <Preference
-          android:key="prefExportToDropbox"
-          android:summary="@string/pref_summary_export_to_dropbox"
-          android:title="@string/pref_title_dropbox"/>
-        <Preference
-            android:key="prefImportFromDevice"
-            android:title="@string/pref_title_import"
-            android:summary="@string/pref_summary_import_from_device"/>
-        <Preference
-          android:key="prefImportFromDropbox"
-          android:summary="@string/pref_summary_import_from_dropbox"
-          android:title="@string/pref_title_dropbox"/>
-    </PreferenceCategory>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+  android:key="prefScreenImportExport">
+  <PreferenceCategory
+    android:key="prefCatSecurity"
+    android:title="@string/pref_cat_title_security">
+    <ListPreference
+      android:defaultValue="0"
+      android:entries="@array/entries_security_mode"
+      android:entryValues="@array/values_security_mode"
+      android:key="prefSecurityParanoList"
+      android:summary="@string/pref_summary_security_parano"
+      android:title="@string/pref_title_security_parano" />
+  </PreferenceCategory>
+  <PreferenceCategory
+    android:key="prefCatDatabaseExport"
+    android:title="@string/pref_cat_title_import_export">
+    <Preference
+      android:key="prefExportToDevice"
+      android:summary="@string/pref_summary_export_to_device"
+      android:title="@string/pref_title_export" />
+    <Preference
+      android:key="prefExportToDropbox"
+      android:summary="@string/pref_summary_export_to_dropbox"
+      android:title="@string/pref_title_dropbox" />
+    <Preference
+      android:key="prefImportFromDevice"
+      android:summary="@string/pref_summary_import_from_device"
+      android:title="@string/pref_title_import" />
+    <Preference
+      android:key="prefImportFromDropbox"
+      android:summary="@string/pref_summary_import_from_dropbox"
+      android:title="@string/pref_title_dropbox" />
+  </PreferenceCategory>
 
 </PreferenceScreen>
