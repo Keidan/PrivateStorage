@@ -70,9 +70,6 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_entries);
     PrivateStorageApp app = (PrivateStorageApp)getApplication();
-    Throwable t;
-    if((t = app.install()) != null)
-      UI.showAlertDialog(this, R.string.exception, t.getMessage());
     mSql = app.getSql();
 
     try {
@@ -172,7 +169,7 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
     super.onPause();
     PrivateStorageApp app = (PrivateStorageApp)getApplicationContext();
     PrivateStorageApp.ParanoiacMode pm = app.getParanoiacMode();
-    if(((pm == PrivateStorageApp.ParanoiacMode.BOTH || pm == PrivateStorageApp.ParanoiacMode.SCREEN_OFF) && !app.isScreenOn()) ||
+    if(((pm == PrivateStorageApp.ParanoiacMode.BOTH || pm == PrivateStorageApp.ParanoiacMode.SCREEN_OFF) && app.isScreenOff()) ||
       ((pm == PrivateStorageApp.ParanoiacMode.BOTH || pm == PrivateStorageApp.ParanoiacMode.BACKGROUND) && app.isInBackground())) {
       finish();
       Sys.switchTo(this, LoginActivity.class, true);

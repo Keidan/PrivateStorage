@@ -29,9 +29,6 @@ public class ForgotActivity extends AppCompatActivity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.content_forgot);
     PrivateStorageApp app = (PrivateStorageApp)getApplication();
-    Throwable t;
-    if((t = app.install()) != null)
-      UI.showAlertDialog(this, R.string.exception, t.getMessage());
     mSql = app.getSql();
     ((PrivateStorageApp)getApplicationContext()).setFrom(null);
   }

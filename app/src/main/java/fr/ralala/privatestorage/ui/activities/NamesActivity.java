@@ -100,7 +100,7 @@ public class NamesActivity extends DoubleBackActivity implements AdapterView.OnI
     super.onPause();
     PrivateStorageApp app = (PrivateStorageApp)getApplicationContext();
     PrivateStorageApp.ParanoiacMode pm = app.getParanoiacMode();
-    if(((pm == PrivateStorageApp.ParanoiacMode.BOTH || pm == PrivateStorageApp.ParanoiacMode.SCREEN_OFF) && !app.isScreenOn()) ||
+    if(((pm == PrivateStorageApp.ParanoiacMode.BOTH || pm == PrivateStorageApp.ParanoiacMode.SCREEN_OFF) && app.isScreenOff()) ||
       ((pm == PrivateStorageApp.ParanoiacMode.BOTH || pm == PrivateStorageApp.ParanoiacMode.BACKGROUND) && app.isInBackground())) {
       finish();
       Sys.switchTo(this, LoginActivity.class, true);

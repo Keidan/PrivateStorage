@@ -28,9 +28,6 @@ public abstract class DoubleBackActivity extends AppCompatActivity {
     super.onCreate(savedInstanceState);
 
     mApp = (PrivateStorageApp)getApplication();
-    Throwable t;
-    if((t = mApp.install()) != null)
-      UI.showAlertDialog(this, R.string.exception, t.getMessage());
     mSql = mApp.getSql();
   }
 

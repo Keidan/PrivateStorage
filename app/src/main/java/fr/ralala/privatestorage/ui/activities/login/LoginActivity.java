@@ -53,6 +53,7 @@ public class LoginActivity extends DoubleBackActivity implements OnEditorActionL
 
   public void onResume() {
     super.onResume();
+    getApp().leaveFromBackground();
     mTokenET.setText("");
     Button loginBT = findViewById(R.id.loginBT);
     Button linkToForgotBT = findViewById(R.id.linkToForgotBT);

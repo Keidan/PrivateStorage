@@ -1,11 +1,12 @@
 package fr.ralala.privatestorage;
 
-import android.app.Activity;
 import android.app.Application;
+import android.arch.lifecycle.Lifecycle;
+import android.arch.lifecycle.LifecycleObserver;
+import android.arch.lifecycle.OnLifecycleEvent;
+import android.arch.lifecycle.ProcessLifecycleOwner;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Build;
-import android.os.Bundle;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -24,7 +25,7 @@ import fr.ralala.privatestorage.utils.BlowfishCipher;
  *
  *******************************************************************************
  */
-public class PrivateStorageApp extends Application implements Application.ActivityLifecycleCallbacks {
+public class PrivateStorageApp extends Application implements LifecycleObserver {
 
   private static final String PREFS_KEY_LAST_EXPORT = "pKeyLastExportType";
   public static final String PREFS_VAL_LAST_EXPORT_DROPBOX = "dropbox";
@@ -32,10 +33,8 @@ public class PrivateStorageApp extends Application implements Application.Activi
   private static final String TOKEN_KEY = "token";
   private SharedPreferences mSharedPref;
   private SqlFactory mSql;
-  private boolean mInstalled = false;
   private BlowfishCipher mBlowfishCipher = null;
   private Class<?> mFrom = null;
-  private int mNumStarted = 0;
   private boolean mIsInBackground = false;
   private String mCurrentName = null;
   private DropboxImportExport mDropboxImportExport = null;
@@ -61,21 +60,10 @@ public class PrivateStorageApp extends Application implements Application.Activi
     String last = getLastExportType();
     if(last == null || last.isEmpty())
       setLastExportType(PREFS_VAL_LAST_EXPORT_DROPBOX);
-  }
-
-  public Throwable install() {
-    if(mInstalled) return null;
-    try {
-      mBlowfishCipher = new BlowfishCipher();
-      mSql = new SqlFactory(mBlowfishCipher, this);
-      mSharedPref = getSharedPreferences(getString(R.string.app_name), Context.MODE_PRIVATE);
-      mInstalled = true;
-      registerActivityLifecycleCallbacks(this);
-      return null;
-    } catch (final Exception e) {
-      Log.e(getClass().getSimpleName(), "Error: " + e.getMessage(), e);
-      return e;
-    }
+    mBlowfishCipher = new BlowfishCipher();
+    mSql = new SqlFactory(mBlowfishCipher, this);
+    mSharedPref = getSharedPreferences(getString(R.string.app_name), Context.MODE_PRIVATE);
+    ProcessLifecycleOwner.get().getLifecycle().addObserver(this);
   }
 
   public SqlFactory getSql() {
@@ -139,17 +127,11 @@ public class PrivateStorageApp extends Application implements Application.Activi
     mFrom = from;
   }
 
-  public boolean isScreenOn() {
+  public boolean isScreenOff() {
     // If the screen is off then the device has been locked
     // approach from https://stackoverflow.com/questions/1588061/android-how-to-receive-broadcast-intents-action-screen-on-off
     PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
-    boolean on;
-    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
-      on = powerManager.isInteractive();
-    } else {
-      on = powerManager.isScreenOn();
-    }
-    return on;
+    return !powerManager.isInteractive();
   }
 
   public boolean isInBackground() {
@@ -172,46 +154,21 @@ public class PrivateStorageApp extends Application implements Application.Activi
     return mDropboxImportExport;
   }
 
+  public void leaveFromBackground() {
+    mIsInBackground = false;
+  }
+
   /******* IMPL ********/
-
-  @Override
-  public void onActivityCreated(Activity activity, Bundle bundle) {
+  @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
+  public void onAppBackgrounded() {
+    //App in background
+    mIsInBackground = true;
   }
 
-  @Override
-  public void onActivityStarted(Activity activity) {
-    if (mNumStarted == 0) {
-      mIsInBackground = false;
-      Log.e(getClass().getSimpleName(), "app went to foreground");
-    }
-    mNumStarted++;
+  @OnLifecycleEvent(Lifecycle.Event.ON_START)
+  public void onAppForegrounded() {
+    // App in foreground
   }
-
-  @Override
-  public void onActivityResumed(Activity activity) {
-  }
-
-  @Override
-  public void onActivityPaused(Activity activity) {
-  }
-
-  @Override
-  public void onActivityStopped(Activity activity) {
-    mNumStarted--;
-    if (mNumStarted == 0) {
-      mIsInBackground = true;
-      Log.e(getClass().getSimpleName(), "app went to background");
-    }
-  }
-
-  @Override
-  public void onActivitySaveInstanceState(Activity activity, Bundle bundle) {
-  }
-
-  @Override
-  public void onActivityDestroyed(Activity activity) {
-  }
-
 
   /* ----------------------------------
    * Global configuration
