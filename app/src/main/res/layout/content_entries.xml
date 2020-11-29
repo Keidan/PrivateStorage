@@ -16,11 +16,12 @@
     android:text="@null"
     android:textSize="18sp" />
 
-  <android.widget.ListView
+  <android.support.v7.widget.RecyclerView
     android:id="@+id/content_form"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:scrollbars="vertical">
 
-  </android.widget.ListView>
+  </android.support.v7.widget.RecyclerView>
 </LinearLayout>
 

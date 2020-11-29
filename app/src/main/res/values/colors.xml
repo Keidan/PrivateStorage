@@ -13,4 +13,6 @@
   <color name="colorBackground">#FF424242</color>
   <color name="colorControlNormal">#FF424242</color>
   <color name="transparent">@android:color/transparent</color>
+  <color name="item_edit">#c883ce8f</color>
+  <color name="item_delete">#c8cb4f59</color>
 </resources>

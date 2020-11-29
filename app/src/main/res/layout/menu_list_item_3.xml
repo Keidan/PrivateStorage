@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
   android:id="@+id/rl"
   android:layout_width="fill_parent"
-  android:layout_height="fill_parent"
+  android:layout_height="wrap_content"
   android:background="@drawable/color_selector"
   android:padding="2dp">
 
@@ -16,19 +16,7 @@
     android:contentDescription="@null"
     android:focusable="false"
     android:focusableInTouchMode="false"
-    android:src="@mipmap/ic_dots_3" />
-
-  <ImageView
-    android:id="@+id/menu"
-    android:layout_width="30dp"
-    android:layout_height="30dp"
-    android:layout_alignParentEnd="true"
-    android:layout_gravity="end"
-    android:clickable="false"
-    android:contentDescription="@null"
-    android:focusable="false"
-    android:focusableInTouchMode="false"
-    android:src="@mipmap/ic_dots_3" />
+    android:src="@mipmap/ic_copy" />
 
   <TextView
     android:id="@+id/value"

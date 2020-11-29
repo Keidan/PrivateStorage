@@ -1,9 +1,9 @@
 <resources>
-    <!--<string name="blowfish_cipher_key" translatable="false">YOUR_BLOWFISH_KEY_HERE</string>-->
-    <string name="blowfish_cipher_key" translatable="false">546A576E5A7234753778214125432A462D4A614E645267556B58703273357638</string>
+    <string name="blowfish_cipher_key" translatable="false">YOUR_BLOWFISH_KEY_HERE</string>
     <string name="app_key" translatable="false">YOUR_APP_KEY_HERE</string>
     <string name="accesstoken" translatable="false">YOUR_GENERATED_ACCESS_TOKEN_HERE</string>
 
+    <string name="swipe_information">Swipe from left to right to edit and from right to left to delete</string>
     <string name="text_start_https" translatable="false">https://</string>
     <string name="password_hint">Password &#8230;</string>
     <string name="loading">Loading &#8230;</string>

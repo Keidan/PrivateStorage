@@ -9,7 +9,8 @@ import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.widget.ListView;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
@@ -33,14 +34,14 @@ import java.util.Locale;
 import fr.ralala.privatestorage.R;
 import fr.ralala.privatestorage.PrivateStorageApp;
 import fr.ralala.privatestorage.items.SpinnerIconItem;
-import fr.ralala.privatestorage.items.SqlItem;
 import fr.ralala.privatestorage.items.SqlNameItem;
 import fr.ralala.privatestorage.sql.SqlFactory;
+import fr.ralala.privatestorage.ui.adapters.RecyclerViewAdapter;
 import fr.ralala.privatestorage.ui.adapters.SpinnerIconArrayAdapter;
 import fr.ralala.privatestorage.ui.adapters.SqlEntriesArrayAdapter;
-import fr.ralala.privatestorage.ui.adapters.SqlItemArrayAdapter;
 import fr.ralala.privatestorage.items.SqlEntryItem;
 import fr.ralala.privatestorage.ui.activities.login.LoginActivity;
+import fr.ralala.privatestorage.ui.utils.SwipeEditDeleteRecyclerViewItem;
 import fr.ralala.privatestorage.utils.Sys;
 import fr.ralala.privatestorage.ui.utils.UI;
 
@@ -54,7 +55,7 @@ import fr.ralala.privatestorage.ui.utils.UI;
  *
  *******************************************************************************
  */
-public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAdapter.SqlItemArrayAdapterMenuListener, AdapterView.OnItemLongClickListener {
+public class EntriesActivity extends AppCompatActivity implements RecyclerViewAdapter.AdapterOnLongClickListener, SwipeEditDeleteRecyclerViewItem.SwipeEditDeleteRecyclerViewItemListener {
   private static final int REQ_ID_ADD = 0;
   private static final int REQ_ID_EDIT = 1;
 
@@ -82,12 +83,17 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
 
     TextView tv = findViewById(R.id.name);
     tv.setText(mOwner.getKey());
-    ListView list = findViewById(R.id.content_form);
-    list.setOnItemLongClickListener(this);
     try {
-      mAdapter = new SqlEntriesArrayAdapter(this,
-        R.layout.menu_list_item_3, mSql.getEntries(mOwner), this, R.menu.popup_listview_form);
-      list.setAdapter(mAdapter);
+      RecyclerView mRecyclerView = findViewById(R.id.content_form);
+      mRecyclerView.setHasFixedSize(true);
+      RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
+      mRecyclerView.setLayoutManager(layoutManager);
+      mRecyclerView.getRecycledViewPool().clear();
+      mAdapter = new SqlEntriesArrayAdapter(mRecyclerView, R.layout.menu_list_item_3, mSql.getEntries(mOwner));
+      mAdapter.setClickListeners(null, this);
+      mRecyclerView.setAdapter(mAdapter);
+      mAdapter.safeNotifyDataSetChanged();
+      new SwipeEditDeleteRecyclerViewItem(this, mRecyclerView, this);
     } catch(Exception e) {
       Log.e(getClass().getSimpleName(), "SQL: " + e.getMessage(), e);
       UI.showAlertDialog(this, R.string.error, "SQL: " + e.getMessage());
@@ -156,6 +162,10 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
       actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM | ActionBar.DISPLAY_SHOW_HOME);
     }
 
+    if(!app.isSwipeEntriesDisplayed()) {
+      UI.toastLong(this, R.string.swipe_information);
+      app.swipeEntriesDisplayed();
+    }
   }
 
   @Override
@@ -177,7 +187,7 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
   }
 
   @Override
-  public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+  public void onItemLongClick(int position, View v) {
     SqlEntryItem item = (SqlEntryItem)mAdapter.getItem(position);
     if(item != null) {
       Vibrator vibrator = ((Vibrator) getSystemService(VIBRATOR_SERVICE));
@@ -195,14 +205,14 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
         case PASSWORD: {
           if (vibrator != null)
             vibrator.vibrate(50);
-          TextView tv = view.findViewById(R.id.value);
+          TextView tv = v.findViewById(R.id.value);
           mAdapter.setValueVisible(tv.getText().toString().equals(item.getValue()) ? -1 : position);
           break;
         }
         case LOGIN: {
           if (vibrator != null)
             vibrator.vibrate(50);
-          TextView tv = view.findViewById(R.id.value);
+          TextView tv = v.findViewById(R.id.value);
           String [] split = tv.getText().toString().split("\n");
           String val = "";
           if(split[0].startsWith(getString(R.string.login) + ": "))
@@ -226,7 +236,6 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
           break;
       }
     }
-    return true;
   }
 
   public boolean validateInputText(int reqId, int type, String text1, String text2, String text3) {
@@ -252,7 +261,7 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
       }
       try {
         if(reqId == REQ_ID_EDIT) {
-          mAdapter.remove(mCurrentItem);
+          mAdapter.removeItem(mCurrentItem);
           mCurrentItem.set(sti);
           mSql.updateEntry(mCurrentItem);
           sti = mCurrentItem;
@@ -263,7 +272,7 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
           }
           mSql.addEntry(mOwner, sti);
         }
-        mAdapter.add(sti);
+        mAdapter.addItem(sti);
       } catch(Exception e) {
         Log.e(getClass().getSimpleName(), "SQL: " + e.getMessage(), e);
         UI.showAlertDialog(this, R.string.error, "SQL: " + e.getMessage());
@@ -298,22 +307,37 @@ public class EntriesActivity extends AppCompatActivity implements SqlItemArrayAd
     return super.onOptionsItemSelected(item);
   }
 
-
-  public void onMenuEdit(SqlItem t) {
-    mCurrentItem = (SqlEntryItem)t;
-    String [] split = t.getValue().split("\n");
+  /**
+   * Called when a ViewHolder is swiped from left to right by the user.
+   *
+   * @param adapterPosition The position in the adapter.
+   */
+  @Override
+  public void onClickEdit(int adapterPosition) {
+    SqlEntryItem entry = (SqlEntryItem)mAdapter.getItem(adapterPosition);
+    if (entry == null) return;
+    mCurrentItem = entry;
+    String [] split = entry.getValue().split("\n");
     showInputDialog(R.string.new_entry_title, R.string.new_entry_hint_key, mCurrentItem.getType(),
-        t.getKey(), split[0], split.length == 2 ? split[1] : null, REQ_ID_EDIT);
+        entry.getKey(), split[0], split.length == 2 ? split[1] : null, REQ_ID_EDIT);
   }
 
-  public void onMenuDelete(final SqlItem t) {
+  /**
+   * Called when a ViewHolder is swiped from right to left by the user.
+   *
+   * @param adapterPosition The position in the adapter.
+   */
+  @Override
+  public void onClickDelete(int adapterPosition) {
+    SqlEntryItem entry = (SqlEntryItem)mAdapter.getItem(adapterPosition);
+    if (entry == null) return;
     UI.showConfirmDialog(this, R.string.confirm_delete_name_title, R.string.confirm_delete_name_message,
       new View.OnClickListener() {
         @Override
         public void onClick(View view) {
           try {
-            mAdapter.remove(t);
-            mSql.deleteEntry(mOwner, (SqlEntryItem)t);
+            mAdapter.removeItem(entry);
+            mSql.deleteEntry(mOwner, entry);
           } catch(Exception e) {
             Log.e(getClass().getSimpleName(), "SQL: " + e.getMessage(), e);
             UI.showAlertDialog(EntriesActivity.this, R.string.error, "SQL: " + e.getMessage());

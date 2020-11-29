@@ -30,6 +30,8 @@ public class PrivateStorageApp extends Application implements LifecycleObserver 
   private static final String PREFS_KEY_LAST_EXPORT = "pKeyLastExportType";
   public static final String PREFS_VAL_LAST_EXPORT_DROPBOX = "dropbox";
   public static final String PREFS_VAL_LAST_EXPORT_DEVICE = "device";
+  public static final String PREFS_VAL_SWIPE_NAMES = "swipeNames";
+  public static final String PREFS_VAL_SWIPE_ENTRIES = "swipeEntires";
   private static final String TOKEN_KEY = "token";
   private SharedPreferences mSharedPref;
   private SqlFactory mSql;
@@ -174,6 +176,43 @@ public class PrivateStorageApp extends Application implements LifecycleObserver 
    * Global configuration
    * ----------------------------------
    */
+
+  /**
+   * Tests if the toast used for the swipe information is displayed or not (names activity).
+   * @return boolean
+   */
+  public boolean isSwipeNamesDisplayed() {
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+    return prefs.getBoolean(PREFS_VAL_SWIPE_NAMES, false);
+  }
+
+  /**
+   * Tests if the toast used for the swipe information is displayed or not (entries activity).
+   * @return boolean
+   */
+  public boolean isSwipeEntriesDisplayed() {
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+    return prefs.getBoolean(PREFS_VAL_SWIPE_ENTRIES, false);
+  }
+  /**
+   * Changes the display value of the toast used for the swipe information (names activity).
+   */
+  public void swipeNamesDisplayed() {
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+    SharedPreferences.Editor e = prefs.edit();
+    e.putBoolean(PREFS_VAL_SWIPE_NAMES, true);
+    e.apply();
+  }
+
+  /**
+   * Changes the display value of the toast used for the swipe information (entries activity).
+   */
+  public void swipeEntriesDisplayed() {
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+    SharedPreferences.Editor e = prefs.edit();
+    e.putBoolean(PREFS_VAL_SWIPE_ENTRIES, true);
+    e.apply();
+  }
 
   /**
    * Returns the last export mode used.

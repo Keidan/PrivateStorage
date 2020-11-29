@@ -44,7 +44,7 @@ public final class UriHelpers {
         // DownloadsProvider
         final String id = DocumentsContract.getDocumentId(uri);
         final Uri contentUri = ContentUris
-            .withAppendedId(Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
+            .withAppendedId(Uri.parse("content://downloads/public_downloads"), Long.parseLong(id));
 
         path = getDataColumn(context, contentUri, null, null);
       } else if (isMediaDocument(uri)) {

@@ -8,13 +8,13 @@ import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
-import android.widget.ListView;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.text.InputType;
 import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
@@ -26,13 +26,13 @@ import java.util.List;
 import fr.ralala.privatestorage.R;
 import fr.ralala.privatestorage.PrivateStorageApp;
 import fr.ralala.privatestorage.items.SpinnerIconItem;
-import fr.ralala.privatestorage.items.SqlItem;
 import fr.ralala.privatestorage.items.SqlNameItem;
+import fr.ralala.privatestorage.ui.adapters.RecyclerViewAdapter;
 import fr.ralala.privatestorage.ui.adapters.SpinnerIconArrayAdapter;
 import fr.ralala.privatestorage.ui.adapters.SqlNamesArrayAdapter;
 import fr.ralala.privatestorage.ui.activities.common.DoubleBackActivity;
-import fr.ralala.privatestorage.ui.adapters.SqlItemArrayAdapter;
 import fr.ralala.privatestorage.ui.activities.login.LoginActivity;
+import fr.ralala.privatestorage.ui.utils.SwipeEditDeleteRecyclerViewItem;
 import fr.ralala.privatestorage.utils.Sys;
 import fr.ralala.privatestorage.ui.utils.UI;
 
@@ -46,11 +46,11 @@ import fr.ralala.privatestorage.ui.utils.UI;
  *
  *******************************************************************************
  */
-public class NamesActivity extends DoubleBackActivity implements AdapterView.OnItemClickListener, SqlItemArrayAdapter.SqlItemArrayAdapterMenuListener {
+public class NamesActivity extends DoubleBackActivity implements RecyclerViewAdapter.AdapterOnClickListener, SwipeEditDeleteRecyclerViewItem.SwipeEditDeleteRecyclerViewItemListener {
   private static final int REQ_ID_ADD = 0;
   private static final int REQ_ID_EDIT = 1;
 
-  private SqlItemArrayAdapter mAdapter = null;
+  private SqlNamesArrayAdapter mAdapter = null;
   private SqlNameItem mCurrentItem = null;
   private PrivateStorageApp mApp;
 
@@ -74,12 +74,18 @@ public class NamesActivity extends DoubleBackActivity implements AdapterView.OnI
       return;
     }
     setContentView(R.layout.activity_names);
-    ListView list = findViewById(R.id.content_names);
+
     try {
-      mAdapter = new SqlNamesArrayAdapter(this,
-        R.layout.menu_list_item_2, getSql().getNames(), this, R.menu.popup_listview_names);
-      list.setAdapter(mAdapter);
-      list.setOnItemClickListener(this);
+      RecyclerView mRecyclerView = findViewById(R.id.content_names);
+      mRecyclerView.setHasFixedSize(true);
+      RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
+      mRecyclerView.setLayoutManager(layoutManager);
+      mRecyclerView.getRecycledViewPool().clear();
+      mAdapter = new SqlNamesArrayAdapter(mRecyclerView, R.layout.menu_list_item_2, getSql().getNames());
+      mAdapter.setClickListeners(this, null);
+      mRecyclerView.setAdapter(mAdapter);
+      mAdapter.safeNotifyDataSetChanged();
+      new SwipeEditDeleteRecyclerViewItem(this, mRecyclerView, this);
     } catch(Exception e) {
       Log.e(getClass().getSimpleName(), "SQL: " + e.getMessage(), e);
       UI.showAlertDialog(this, R.string.error, "SQL: " + e.getMessage());
@@ -93,6 +99,11 @@ public class NamesActivity extends DoubleBackActivity implements AdapterView.OnI
     ((PrivateStorageApp)getApplicationContext()).setFrom(this.getClass());
 
     getApp().setCurrentName(null);
+
+    if(!getApp().isSwipeNamesDisplayed()) {
+      UI.toastLong(this, R.string.swipe_information);
+      getApp().swipeNamesDisplayed();
+    }
   }
 
   @Override
@@ -117,7 +128,7 @@ public class NamesActivity extends DoubleBackActivity implements AdapterView.OnI
       SqlNameItem sti = new SqlNameItem(SqlNameItem.Type.fromInt(type), text, "");
       try {
         if(reqId == REQ_ID_EDIT) {
-          mAdapter.remove(mCurrentItem);
+          mAdapter.removeItem(mCurrentItem);
           mCurrentItem.setKey(text);
           mCurrentItem.setType(sti.getType());
           getSql().updateName(mCurrentItem);
@@ -129,7 +140,7 @@ public class NamesActivity extends DoubleBackActivity implements AdapterView.OnI
           }
           getSql().addName(sti);
         }
-        mAdapter.add(sti);
+        mAdapter.addItem(sti);
         if(reqId == REQ_ID_ADD) {
           getApp().setCurrentName(sti.getKey());
           Sys.switchTo(this, EntriesActivity.class, false);
@@ -184,22 +195,37 @@ public class NamesActivity extends DoubleBackActivity implements AdapterView.OnI
     return super.onOptionsItemSelected(item);
   }
 
-
-  public void onMenuEdit(SqlItem t) {
-    mCurrentItem = (SqlNameItem)t;
-    showInputDialog2(R.string.update_data_title, ((SqlNameItem) t).getType(), t.getKey(), REQ_ID_EDIT);
+  /**
+   * Called when a ViewHolder is swiped from left to right by the user.
+   *
+   * @param adapterPosition The position in the adapter.
+   */
+  @Override
+  public void onClickEdit(int adapterPosition) {
+    SqlNameItem entry = (SqlNameItem)mAdapter.getItem(adapterPosition);
+    if (entry == null) return;
+    mCurrentItem = entry;
+    showInputDialog2(R.string.update_data_title, entry.getType(), entry.getKey(), REQ_ID_EDIT);
   }
 
-  public void onMenuDelete(final SqlItem t) {
+  /**
+   * Called when a ViewHolder is swiped from right to left by the user.
+   *
+   * @param adapterPosition The position in the adapter.
+   */
+  @Override
+  public void onClickDelete(int adapterPosition) {
+    SqlNameItem entry = (SqlNameItem)mAdapter.getItem(adapterPosition);
+    if (entry == null) return;
     UI.showConfirmDialog(this, R.string.confirm_delete_name_title, R.string.confirm_delete_name_message, (view) -> {
-      mAdapter.remove(t);
-      getSql().deleteName((SqlNameItem)t);
+      mAdapter.removeItem(entry);
+      getSql().deleteName(entry);
     }, null);
   }
 
   @Override
-  public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-    SqlNameItem sti = (SqlNameItem)mAdapter.getItem(i);
+  public void onItemClick(int position, View v) {
+    SqlNameItem sti = (SqlNameItem)mAdapter.getItem(position);
     if(sti != null) {
       getApp().setCurrentName(sti.getKey());
       Sys.switchTo(this, EntriesActivity.class, false);
