@@ -6,7 +6,6 @@ import android.util.Log;
 
 import com.dropbox.core.DbxRequestConfig;
 import com.dropbox.core.android.Auth;
-import com.dropbox.core.http.OkHttp3Requestor;
 import com.dropbox.core.v2.DbxClientV2;
 
 import fr.ralala.privatestorage.R;
@@ -90,9 +89,7 @@ public class DropboxHelper {
     String accessToken = prefs.getString(KEY, null);
     if (accessToken == null) {
       accessToken = getAccessToken(ctx, prefs, accessToken);
-      if (accessToken != null) {
-        initDropBox(accessToken);
-      }
+      initDropBox(accessToken);
     } else {
       initDropBox(getAccessToken(ctx, prefs, accessToken));
     }
@@ -104,9 +101,8 @@ public class DropboxHelper {
    */
   private void initDropBox(String accessToken) {
     if (mDbxClient == null) {
-      DbxRequestConfig requestConfig = DbxRequestConfig.newBuilder(getClass().getPackage().getName())
-        .withHttpRequestor(OkHttp3Requestor.INSTANCE)
-        .build();
+      DbxRequestConfig.Builder b = DbxRequestConfig.newBuilder(getClass().getPackage().getName());
+      DbxRequestConfig requestConfig = b.build();
       mDbxClient = new DbxClientV2(requestConfig, accessToken);
     }
   }
